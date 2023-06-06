@@ -134,7 +134,6 @@ class LoadAnnotations(MMCV_LoadAnnotations):
 @TRANSFORMS.register_module()
 class LoadCarlaAnnotations(MMCV_LoadAnnotations):
 
-
     def __init__(
         self,
         reduce_zero_label=None,
