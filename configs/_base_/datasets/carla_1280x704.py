@@ -2,7 +2,7 @@
 dataset_type = 'CarlaDataset'
 data_root = '/media/ljh/data/carla_test'
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', to_float32=True),
     dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
     dict(
         type='Resize',
@@ -10,7 +10,7 @@ train_pipeline = [
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', to_float32=True),
     dict(type='Resize', scale=(1280, 704)),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
