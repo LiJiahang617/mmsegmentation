@@ -45,7 +45,7 @@ class SegDataPreProcessor(BaseDataPreprocessor):
               with pad_val.
         bgr_to_rgb (bool): whether to convert image from BGR to RGB.
             Defaults to False.
-        rgb_to_bgr (bool): whether to convert image from RGB to RGB.
+        rgb_to_bgr (bool): whether to convert image from RGB to BGR.
             Defaults to False.
         batch_augments (list[dict], optional): Batch-level augmentations
         test_cfg (dict, optional): The padding size config in testing, if not

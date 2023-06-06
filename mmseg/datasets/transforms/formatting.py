@@ -41,10 +41,11 @@ class PackSegInputs(BaseTransform):
             'flip_direction')``
     """
 
+#   Modified in 23.6.4 by kobe li
     def __init__(self,
                  meta_keys=('img_path', 'seg_map_path', 'ori_shape',
                             'img_shape', 'pad_shape', 'scale_factor', 'flip',
-                            'flip_direction', 'reduce_zero_label')):
+                            'flip_direction', 'reduce_zero_label', 'ano_img_path')):
         self.meta_keys = meta_keys
 
     def transform(self, results: dict) -> dict:
@@ -71,6 +72,17 @@ class PackSegInputs(BaseTransform):
                 img = img.transpose(2, 0, 1)
                 img = to_tensor(img).contiguous()
             packed_results['inputs'] = img
+
+        if 'ano' in results:
+            ano = results['ano']
+            if len(ano.shape) < 3:
+                ano = np.expand_dims(ano, -1)
+            if not ano.flags.c_contiguous:
+                ano = to_tensor(np.ascontiguousarray(ano.transpose(2, 0, 1)))
+            else:
+                ano = ano.transpose(2, 0, 1)
+                ano = to_tensor(ano).contiguous()
+            packed_results['another_inputs'] = ano
 
         data_sample = SegDataSample()
         if 'gt_seg_map' in results:
