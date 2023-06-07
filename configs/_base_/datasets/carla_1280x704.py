@@ -6,7 +6,7 @@ train_pipeline = [
     dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
     dict(
         type='Resize',
-        scale=(1280, 704)),
+        scale=(1280, 704)),  # Note: w, h instead of h, w
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
