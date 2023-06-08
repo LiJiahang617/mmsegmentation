@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'CarlaDataset'
-data_root = '/media/ljh/data/carla_test'
+data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_test'
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),
     dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
@@ -28,8 +28,8 @@ train_dataloader = dict(
         reduce_zero_label=False,
         img_suffix='.png',
         data_prefix=dict(
-            img_path='img_dir/training',
-            seg_map_path='ann_dir/training'),
+            img_path='images/training',
+            seg_map_path='annotations/training'),
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -42,8 +42,8 @@ val_dataloader = dict(
         reduce_zero_label=False,
         img_suffix='.png',
         data_prefix=dict(
-            img_path='img_dir/validation',
-            seg_map_path='ann_dir/validation'),
+            img_path='images/validation',
+            seg_map_path='annotations/validation'),
         pipeline=test_pipeline))
 test_dataloader = val_dataloader
 

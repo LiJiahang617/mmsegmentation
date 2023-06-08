@@ -1,7 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os.path as osp
+
 from mmseg.registry import DATASETS
 from .basesegdataset import BaseSegDataset
-
+from typing import List
+import mmengine
+import mmengine.fileio as fileio
 
 @DATASETS.register_module()
 class MMCarlaDataset(BaseSegDataset):
