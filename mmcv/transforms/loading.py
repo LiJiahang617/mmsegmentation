@@ -108,9 +108,9 @@ class LoadImageFromFile(BaseTransform):
         # in some cases, images are not read successfully, the img would be
         # `None`, refer to https://github.com/open-mmlab/mmpretrain/issues/1427
         assert img is not None, f'failed to load image: {filename}'
-        if self.to_float32: # Normalization training: restrict pixel values within 0-1
+        if self.to_float32:  # Normalization training: restrict pixel values within 0-1
             img = img.astype(np.float32)
-            results['img'] = img/255
+            results['img'] = img / 255
             results['img_shape'] = img.shape[:2]
             results['ori_shape'] = img.shape[:2]
         else:
@@ -220,7 +220,7 @@ class LoadMultimodalImageFromFile(BaseTransform):
         """
 
         filename = results['img_path']
-        anoname  = results['ano_path']
+        anoname = results['ano_path']
         try:
             if self.file_client_args is not None:
                 file_client = fileio.FileClient.infer_client(
@@ -245,7 +245,7 @@ class LoadMultimodalImageFromFile(BaseTransform):
                 ano = np.expand_dims(ano, -1)
             # in case normal img do not have three dims
             assert ano.ndim == 3 and ano.dtype == np.float32, 'another image must has 3 dims and float32, ' \
-                    f'even if depth/disp, but found {ano.dtype} and {ano.ndim}'
+                                                              f'even if depth/disp, but found {ano.dtype} and {ano.ndim}'
         except Exception as e:
             if self.ignore_empty:
                 return None
@@ -258,9 +258,9 @@ class LoadMultimodalImageFromFile(BaseTransform):
         if self.to_float32:
             img = img.astype(np.float32)
 
-        results['img'] = img/255
+        results['img'] = img / 255
         if self.modality == 'normal':  # in carla dataset, normal img is uint16, multiplied by 65535, so must divided
-            results['ano'] = ano/65535
+            results['ano'] = ano / 65535
 
         elif self.modality == 'depth':
             assert ano.shape[2] == 4, f'depth_encode should have 4 channels, but found {ano.shape[2]}'
@@ -275,7 +275,7 @@ class LoadMultimodalImageFromFile(BaseTransform):
             depth_normalized = (in_meters - min_depth) / (max_depth - min_depth + epsilon)
             results['ano'] = depth_normalized
         elif self.modality == 'disp' or self.modality == 'tdisp':
-            disp_real = ano.astype(np.float32)/255
+            disp_real = ano.astype(np.float32) / 255
             max_disp = np.max(disp_real)
             min_disp = np.min(disp_real)
             epsilon = 1e-7
@@ -397,15 +397,15 @@ class LoadAnnotations(BaseTransform):
     """
 
     def __init__(
-        self,
-        with_bbox: bool = True,
-        with_label: bool = True,
-        with_seg: bool = False,
-        with_keypoints: bool = False,
-        imdecode_backend: str = 'cv2',
-        file_client_args: Optional[dict] = None,
-        *,
-        backend_args: Optional[dict] = None,
+            self,
+            with_bbox: bool = True,
+            with_label: bool = True,
+            with_seg: bool = False,
+            with_keypoints: bool = False,
+            imdecode_backend: str = 'cv2',
+            file_client_args: Optional[dict] = None,
+            *,
+            backend_args: Optional[dict] = None,
     ) -> None:
         super().__init__()
         self.with_bbox = with_bbox
@@ -533,5 +533,39 @@ class LoadAnnotations(BaseTransform):
             repr_str += f'file_client_args={self.file_client_args})'
         else:
             repr_str += f'backend_args={self.backend_args})'
+
+        return repr_str
+
+
+@TRANSFORMS.register_module()
+class StackByChannel(BaseTransform):
+    """stack two modality images
+
+    """
+
+    def __init__(self, keys=('img', 'ano')) -> None:
+        self.keys = keys
+
+    def transform(self, results: dict) -> Optional[dict]:  ## TODO check if it is suitable in transforms
+        """Functions to stack image.
+
+        Args:
+            results (dict): Result dict from
+                :class:`mmengine.dataset.BaseDataset`.
+
+        Returns:
+            dict: The dict contains loaded image and meta information.
+        """
+        arr_list = [None] * len(self.keys)
+        for i, key in enumerate(self.keys):
+            arr_list[i] = results[key]
+        stack_img = np.dstack(arr_list)
+        results['img'] = stack_img
+        results['stack_shape'] = stack_img.shape
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(keys={self.keys})'
 
         return repr_str

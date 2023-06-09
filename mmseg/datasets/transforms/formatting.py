@@ -143,9 +143,12 @@ class PackMultimodalSegInputs(BaseTransform):
     def __init__(self, keys=('img', 'ano'),
                  meta_keys=('img_path', 'seg_map_path', 'ori_shape',
                             'img_shape', 'pad_shape', 'scale_factor', 'flip',
-                            'flip_direction', 'reduce_zero_label', 'ano_img_path')):
+                            'flip_direction', 'reduce_zero_label', 'ano_path')):
         self.meta_keys = meta_keys
         self.keys = keys
+        warnings.warn(f'this func {self.__class__.__name__} is deprecated by me,'
+                      f' considering using it, cause'
+                      f'it is not appropriate compared to current methods')
     def transform(self, results: dict) -> dict:
         """Method to pack the input data.
 
