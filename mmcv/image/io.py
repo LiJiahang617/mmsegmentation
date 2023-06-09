@@ -231,7 +231,7 @@ def imread(img_or_path: Union[np.ndarray, str, Path],
 
 def imfrombytes(content: bytes,
                 flag: str = 'color',
-                channel_order: str = 'bgr',
+                channel_order: str = 'rgb',
                 backend: Optional[str] = None) -> np.ndarray:
     """Read an image from bytes.
 
