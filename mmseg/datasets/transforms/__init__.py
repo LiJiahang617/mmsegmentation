@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .formatting import PackSegInputs
+from .formatting import (PackSegInputs, PackMultimodalSegInputs)
 from .loading import (LoadAnnotations, LoadBiomedicalAnnotation,LoadCarlaAnnotations,
                       LoadBiomedicalData, LoadBiomedicalImageFromFile,
                       LoadImageFromNDArray)
@@ -17,7 +17,7 @@ from .transforms import (CLAHE, AdjustGamma, BioMedical3DPad,
 __all__ = [
     'LoadAnnotations', 'LoadCarlaAnnotations', 'RandomCrop', 'BioMedical3DRandomCrop', 'SegRescale',
     'PhotoMetricDistortion', 'RandomRotate', 'AdjustGamma', 'CLAHE', 'Rerange',
-    'RGB2Gray', 'RandomCutOut', 'RandomMosaic', 'PackSegInputs',
+    'RGB2Gray', 'RandomCutOut', 'RandomMosaic', 'PackSegInputs', 'PackMultimodalSegInputs',
     'ResizeToMultiple', 'LoadImageFromNDArray', 'LoadBiomedicalImageFromFile',
     'LoadBiomedicalAnnotation', 'LoadBiomedicalData', 'GenerateEdge',
     'ResizeShortestEdge', 'BioMedicalGaussianNoise', 'BioMedicalGaussianBlur',
