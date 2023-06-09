@@ -136,15 +136,18 @@ class LoadImageFromFile(BaseTransform):
 
 @TRANSFORMS.register_module()
 class LoadMultimodalImageFromFile(BaseTransform):
-    """Load an image from file.
-
+    """Load carla multimodal images from file.
+       Note:
+           it is used for carla dataset, if you change the scene, you should
+           modify some options in it.
     Required Keys:
 
     - img_path
-
+    - ano_path
     Modified Keys:
 
     - img
+    - ano
     - img_shape
     - ori_shape
 
