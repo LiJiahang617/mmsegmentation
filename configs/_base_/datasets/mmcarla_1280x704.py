@@ -2,7 +2,7 @@
 dataset_type = 'MMCarlaDataset'
 data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_test'
 train_pipeline = [
-    dict(type='LoadMultimodalImageFromFile', to_float32=True),
+    dict(type='LoadMultimodalImageFromFile', modality='normal'),
     dict(type='StackByChannel', keys=('img', 'ano')),
     dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
     dict(
@@ -11,7 +11,7 @@ train_pipeline = [
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
-    dict(type='LoadMultimodalImageFromFile', to_float32=True),
+    dict(type='LoadMultimodalImageFromFile', modality='normal'),
     dict(type='StackByChannel', keys=('img', 'ano')),
     dict(type='Resize', scale=(1280, 704)),
     # add loading annotation after ``Resize`` because ground truth
