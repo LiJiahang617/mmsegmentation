@@ -418,7 +418,7 @@ class Mask2FormerHead(MaskFormerHead):
             mask = decoder_input.new_zeros(
                 (batch_size, ) + multi_scale_memorys[i].shape[-2:],
                 dtype=torch.bool)
-            # shape -> (batch_size, 2c, h, w)
+            # shape -> (batch_size, 2*num_feats, h, w)  num_feats-> 128
             decoder_positional_encoding = self.decoder_positional_encoding(
                 mask)
             # shape -> (batch_size, h*w, 2*num_feats)  num_feats-> 128
@@ -436,7 +436,9 @@ class Mask2FormerHead(MaskFormerHead):
         mask_pred_list = []
         cls_pred, mask_pred, attn_mask = self._forward_head(
             query_feat, mask_features, multi_scale_memorys[0].shape[-2:])
-        cls_pred_list.append(cls_pred)
+        # shape -> (batch_size, num_queries, num_classes)
+        cls_pred_list.append(cls_pred) # TODO decide if the first time adding_to_list is necessary
+        # shape -> (batch_size, num_queries, h_0, w_0)
         mask_pred_list.append(mask_pred)
 
         for i in range(self.num_transformer_decoder_layers): # 9
