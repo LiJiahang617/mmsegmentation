@@ -356,18 +356,19 @@ class Mask2FormerHead(MaskFormerHead):
                     (batch_size * num_heads, num_queries, h, w).
         """
         decoder_out = self.transformer_decoder.post_norm(decoder_out)
-        # shape (num_queries, batch_size, c)
+        # shape (batch_size, num_queries, c) -> (batch_size, num_queries, num_classes)
         cls_pred = self.cls_embed(decoder_out)
-        # shape (num_queries, batch_size, c)
+        # shape (batch_size, num_queries, c) -> (batch_size, num_queries, out_channels)
         mask_embed = self.mask_embed(decoder_out)
-        # shape (num_queries, batch_size, h, w)
+        # shape (batch_size, num_queries, h, w)
         mask_pred = torch.einsum('bqc,bchw->bqhw', mask_embed, mask_feature)
+        # reshape to have equal size with feature map
         attn_mask = F.interpolate(
             mask_pred,
             attn_mask_target_size,
             mode='bilinear',
             align_corners=False)
-        # shape (num_queries, batch_size, h, w) ->
+        # shape (batch_size, num_queries, h, w) ->
         #   (batch_size * num_head, num_queries, h, w)
         attn_mask = attn_mask.flatten(2).unsqueeze(1).repeat(
             (1, self.num_heads, 1, 1)).flatten(0, 1)
@@ -393,7 +394,7 @@ class Mask2FormerHead(MaskFormerHead):
                 - cls_pred_list (list[Tensor)]: Classification logits \
                     for each decoder layer. Each is a 3D-tensor with shape \
                     (batch_size, num_queries, cls_out_channels). \
-                    Note `cls_out_channels` should includes background.
+                    Note `cls_out_channels` should include background.
                 - mask_pred_list (list[Tensor]): Mask logits for each \
                     decoder layer. Each with shape (batch_size, num_queries, \
                     h, w).
@@ -403,21 +404,24 @@ class Mask2FormerHead(MaskFormerHead):
         ]
         batch_size = len(batch_img_metas)
         mask_features, multi_scale_memorys = self.pixel_decoder(x)
-        # multi_scale_memorys (from low resolution to high resolution)
+        # multi_scale_memories (from low resolution to high resolution)
         decoder_inputs = []
         decoder_positional_encodings = []
-        for i in range(self.num_transformer_feat_level):
+        for i in range(self.num_transformer_feat_level): # 3
             decoder_input = self.decoder_input_projs[i](multi_scale_memorys[i])
             # shape (batch_size, c, h, w) -> (batch_size, h*w, c)
             decoder_input = decoder_input.flatten(2).permute(0, 2, 1)
             level_embed = self.level_embed.weight[i].view(1, 1, -1)
+            # shape -> (batch_size, h*w, c) c -> 256
             decoder_input = decoder_input + level_embed
-            # shape (batch_size, c, h, w) -> (batch_size, h*w, c)
+            # shape -> (batch_size, h, w)
             mask = decoder_input.new_zeros(
                 (batch_size, ) + multi_scale_memorys[i].shape[-2:],
                 dtype=torch.bool)
+            # shape -> (batch_size, 2c, h, w)
             decoder_positional_encoding = self.decoder_positional_encoding(
                 mask)
+            # shape -> (batch_size, h*w, 2*num_feats)  num_feats-> 128
             decoder_positional_encoding = decoder_positional_encoding.flatten(
                 2).permute(0, 2, 1)
             decoder_inputs.append(decoder_input)
@@ -435,7 +439,7 @@ class Mask2FormerHead(MaskFormerHead):
         cls_pred_list.append(cls_pred)
         mask_pred_list.append(mask_pred)
 
-        for i in range(self.num_transformer_decoder_layers):
+        for i in range(self.num_transformer_decoder_layers): # 9
             level_idx = i % self.num_transformer_feat_level
             # if a mask is all True(all background), then set it all False.
             attn_mask[torch.where(

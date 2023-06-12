@@ -76,7 +76,7 @@ class MSDeformAttnPixelDecoder(BaseModule):
                 bias=True)
             input_conv_list.append(input_conv)
         self.input_convs = ModuleList(input_conv_list)
-
+        # encoder is a standard Transformer self_attn encoder stacked-layer
         self.encoder = Mask2FormerTransformerEncoder(**encoder)
         self.postional_encoding = SinePositionalEncoding(**positional_encoding)
         # high resolution to low resolution
@@ -161,16 +161,21 @@ class MSDeformAttnPixelDecoder(BaseModule):
         level_positional_encoding_list = []
         spatial_shapes = []
         reference_points_list = []
-        for i in range(self.num_encoder_levels):
+        for i in range(self.num_encoder_levels): # 3
             level_idx = self.num_input_levels - i - 1
+            # fetch from top to down, low resolution to high resolution
             feat = feats[level_idx]
+            # transform channel of feat to 256 (feat_channels)
             feat_projected = self.input_convs[i](feat)
             h, w = feat.shape[-2:]
 
             # no padding
+            # created padding_mask_resized shape -> b, h, w
             padding_mask_resized = feat.new_zeros(
                 (batch_size, ) + feat.shape[-2:], dtype=torch.bool)
+            # self.postional_encoding return 'pos' -> [bs, num_feats*2, h, w] -> num_feats -> 128
             pos_embed = self.postional_encoding(padding_mask_resized)
+            # self.level_encoding -> [3, 256] or [self.num_encoder_levels, feat_channels]
             level_embed = self.level_encoding.weight[i]
             level_pos_embed = level_embed.view(1, -1, 1, 1) + pos_embed
             # (h_i * w_i, 2)
@@ -180,29 +185,32 @@ class MSDeformAttnPixelDecoder(BaseModule):
             factor = feat.new_tensor([[w, h]]) * self.strides[level_idx]
             reference_points = reference_points / factor
 
-            # shape (batch_size, c, h_i, w_i) -> (h_i * w_i, batch_size, c)
+            # shape (batch_size, c, h_i, w_i) -> (batch_size, h_i * w_i,  c) -> c -> 256
             feat_projected = feat_projected.flatten(2).permute(0, 2, 1)
             level_pos_embed = level_pos_embed.flatten(2).permute(0, 2, 1)
+            # created padding_mask_resized shape -> b, h_i * w_i
             padding_mask_resized = padding_mask_resized.flatten(1)
-
+            # feat_projected -> (batch_size, h_i * w_i,  c)
             encoder_input_list.append(feat_projected)
             padding_mask_list.append(padding_mask_resized)
+            # level_pos_embed -> (batch_size, h_i * w_i,  c)
             level_positional_encoding_list.append(level_pos_embed)
             spatial_shapes.append(feat.shape[-2:])
+            # # reference_points -> (h_i * w_i, 2)
             reference_points_list.append(reference_points)
-        # shape (batch_size, total_num_queries),
         # total_num_queries=sum([., h_i * w_i,.])
+        # shape (batch_size, total_num_queries),
         padding_masks = torch.cat(padding_mask_list, dim=1)
-        # shape (total_num_queries, batch_size, c)
+        # shape -> (batch_size, total_num_queries, c)
         encoder_inputs = torch.cat(encoder_input_list, dim=1)
+        # shape -> (batch_size, total_num_queries, c)
         level_positional_encodings = torch.cat(
             level_positional_encoding_list, dim=1)
         device = encoder_inputs.device
-        # shape (num_encoder_levels, 2), from low
-        # resolution to high resolution
+        # shape -> (num_encoder_levels, 2), from low resolution to high resolution
         spatial_shapes = torch.as_tensor(
             spatial_shapes, dtype=torch.long, device=device)
-        # shape (0, h_0*w_0, h_0*w_0+h_1*w_1, ...)
+        # shape -> (0, h_0*w_0, h_0*w_0+h_1*w_1, ...)
         level_start_index = torch.cat((spatial_shapes.new_zeros(
             (1, )), spatial_shapes.prod(1).cumsum(0)[:-1]))
         reference_points = torch.cat(reference_points_list, dim=0)
@@ -210,7 +218,7 @@ class MSDeformAttnPixelDecoder(BaseModule):
             batch_size, 1, self.num_encoder_levels, 1)
         valid_radios = reference_points.new_ones(
             (batch_size, self.num_encoder_levels, 2))
-        # shape (num_total_queries, batch_size, c)
+        # shape -> (batch_size, num_total_queries, c)
         memory = self.encoder(
             query=encoder_inputs,
             query_pos=level_positional_encodings,
