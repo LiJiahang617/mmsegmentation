@@ -178,7 +178,7 @@ class LoadCarlaAnnotations(MMCV_LoadAnnotations):
             'Initialize dataset with `reduce_zero_label` as ' \
             f'{results["reduce_zero_label"]} but when load annotation ' \
             f'the `reduce_zero_label` is {self.reduce_zero_label}'
-        label = np.zeros(results['img_shape'][:2], dtype=np.uint8)
+        label = np.zeros(results['ori_shape'][:2], dtype=np.uint8)  # wrong here
         label[gt_semantic_seg[:, :, 0] == 128] = 1
         label[gt_semantic_seg[:, :, 1] == 255] = 2  # TODO to solve different net label size?
         results['gt_seg_map'] = label

@@ -177,6 +177,7 @@ class MSDeformAttnPixelDecoder(BaseModule):
             pos_embed = self.postional_encoding(padding_mask_resized)
             # self.level_encoding -> [3, 256] or [self.num_encoder_levels, feat_channels]
             level_embed = self.level_encoding.weight[i]
+            # level_pos_embed -> [bs, num_feats*2, h, w]
             level_pos_embed = level_embed.view(1, -1, 1, 1) + pos_embed
             # (h_i * w_i, 2)
             reference_points = self.point_generator.single_level_grid_priors(
@@ -187,6 +188,7 @@ class MSDeformAttnPixelDecoder(BaseModule):
 
             # shape (batch_size, c, h_i, w_i) -> (batch_size, h_i * w_i,  c) -> c -> 256
             feat_projected = feat_projected.flatten(2).permute(0, 2, 1)
+            # shape (batch_size, c, h_i, w_i) -> (batch_size, h_i * w_i,  c)
             level_pos_embed = level_pos_embed.flatten(2).permute(0, 2, 1)
             # created padding_mask_resized shape -> b, h_i * w_i
             padding_mask_resized = padding_mask_resized.flatten(1)
