@@ -9,6 +9,7 @@ from .ema import ExpMomentumEMA
 from .inverted_residual import InvertedResidual
 from .matrix_nms import mask_matrix_nms
 from .msdeformattn_pixel_decoder import MSDeformAttnPixelDecoder
+from .twindeformattn_pixel_decoder import TwinDeformAttnPixelDecoder
 from .normed_predictor import NormedConv2d, NormedLinear
 from .pixel_decoder import PixelDecoder, TransformerEncoderPixelDecoder
 from .positional_encoding import (LearnedPositionalEncoding,
@@ -57,5 +58,6 @@ __all__ = [
     'DABDetrTransformerEncoder', 'ConditionalDetrTransformerDecoder',
     'ConditionalDetrTransformerDecoderLayer', 'DinoTransformerDecoder',
     'CdnQueryGenerator', 'Mask2FormerTransformerEncoder',
-    'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder'
+    'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder',
+    'TwinDeformAttnPixelDecoder'
 ]

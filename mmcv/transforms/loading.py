@@ -238,7 +238,6 @@ class LoadMultimodalImageFromFile(BaseTransform):
                 img = np.expand_dims(img, -1)
             elif len(img.shape) > 3:
                 raise ValueError('RGB image has more than 3 dims, but it should not')
-            assert img.ndim == 3, 'RGB image must has 3 dims'
             ano = mmcv.customfrombytes(
                 ano_bytes, flag='unchanged', backend=self.imdecode_backend).astype(np.float32)
             if len(ano.shape) < 3 and self.modality != 'normal':
@@ -263,7 +262,7 @@ class LoadMultimodalImageFromFile(BaseTransform):
             results['ano'] = ano / 65535
 
         elif self.modality == 'depth':
-            assert ano.shape[2] == 4, f'depth_encode should have 4 channels, but found {ano.shape[2]}'
+            assert ano.shape[2] == 4, f'depth_encode in CarlaDataset should have 4 channels, but found {ano.shape[2]}'
             scales = np.array([65536.0, 256.0, 1.0, 0]) / (256 ** 3 - 1) * 1000
             in_meters = np.dot(ano, scales).astype(np.float32)
             max_depth = np.max(in_meters)

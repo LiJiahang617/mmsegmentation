@@ -1,10 +1,10 @@
 _base_ = [
-    '../_base_/default_runtime.py', '../_base_/datasets/carla_1280x704.py'
+    '../_base_/default_runtime.py', '../_base_/datasets/mmcarla_1280x704.py'
 ]
 
 pretrained = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/swin/swin_base_patch4_window12_384_20220317-55b0104a.pth'  # noqa
 
-crop_size = (704, 1280) # h, w
+crop_size = (352, 640) # h, w
 data_preprocessor = dict(
     type='SegDataPreProcessor',
     mean=[0, 0, 0],
@@ -38,8 +38,8 @@ model = dict(
         frozen_stages=-1,
         init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
     decode_head=dict(
-        type='Mask2FormerHead',
-        in_channels=[128, 256, 512, 1024],
+        type='TwinFormerHead',
+        in_channels=[256, 512, 1024, 2048], # modified here
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,
@@ -48,7 +48,7 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.MSDeformAttnPixelDecoder',
+            type='mmdet.TwinDeformAttnPixelDecoder',
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
             act_cfg=dict(type='ReLU'),

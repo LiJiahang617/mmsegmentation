@@ -7,12 +7,11 @@ from typing import List
 import mmengine
 import mmengine.fileio as fileio
 
+
 @DATASETS.register_module()
 class MMCarlaDataset(BaseSegDataset):
     """Carla dataset.
 
-    The ``img_suffix`` is fixed to '_leftImg8bit.png' and ``seg_map_suffix`` is
-    fixed to '_gtFine_labelTrainIds.png' for Cityscapes dataset.
     """
     METAINFO = dict(
         classes=('background', 'road', 'pothole'),
@@ -22,11 +21,18 @@ class MMCarlaDataset(BaseSegDataset):
     def __init__(self,
                  img_suffix='.png',
                  seg_map_suffix='.png',
+                 modality=None,
                  **kwargs) -> None:
         super().__init__(
             img_suffix=img_suffix, seg_map_suffix=seg_map_suffix, **kwargs)
-
-
+        print(f'use {modality} as another modality.')
+        self.modality = modality
+        self.modality_path_map = {
+            'depth': self.data_prefix.get('depth_path', None),
+            'disp': self.data_prefix.get('disp_path', None),
+            'tdisp': self.data_prefix.get('tdisp_path', None),
+            'normal': self.data_prefix.get('normal_path', None)
+        }
     def load_data_list(self) -> List[dict]:
         """Load multimodal-annotation from directory or annotation file.
 
@@ -34,8 +40,11 @@ class MMCarlaDataset(BaseSegDataset):
             list[dict]: All data info of dataset.
         """
         data_list = []
+
         img_dir = self.data_prefix.get('img_path', None)
-        ano_dir = self.data_prefix.get('ano_path', None)
+        ano_dir = self.modality_path_map.get(self.modality)
+        if ano_dir == None:
+            raise ValueError(f'can not find another modality data in {self.modality}')
         ann_dir = self.data_prefix.get('seg_map_path', None)
         if osp.isfile(self.ann_file):
             lines = mmengine.list_from_file(

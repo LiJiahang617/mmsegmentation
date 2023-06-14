@@ -819,7 +819,7 @@ class TwinSwinTransformer(BaseModule):
                 out_y = out_y.view(-1, *out_yhw_shape, self.num_features[i]).permute(0, 3, 1, 2).contiguous()
                 outs_x.append(out_x)
                 outs_y.append(out_y)
-                # concate rgb encoder and ano encoder together and feed them to following parts
+                # concat rgb encoder and ano encoder together and feed them to following parts
                 outs = [torch.cat((out_x, out_y), dim=1) for out_x, out_y in zip(outs_x, outs_y)]
 
         return outs
