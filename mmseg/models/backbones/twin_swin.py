@@ -755,15 +755,35 @@ class TwinSwinTransformer(BaseModule):
             if list(state_dict.keys())[0].startswith('module.'):
                 state_dict = {k[7:]: v for k, v in state_dict.items()}
 
-            # reshape absolute position embedding
-            if state_dict.get('absolute_pos_embed') is not None:
-                absolute_pos_embed = state_dict['absolute_pos_embed']
+            state_dict_x = OrderedDict()
+            state_dict_y = OrderedDict()
+
+            for k, v in state_dict.items():
+                # 找到第一个'.'的位置
+                first_dot_pos = k.find('.')
+                if first_dot_pos != -1:
+                    # 在第一个'.'之前的部分添加'_x'或'_y'
+                    new_key_x = k[:first_dot_pos] + '_x' + k[first_dot_pos:]
+                    new_key_y = k[:first_dot_pos] + '_y' + k[first_dot_pos:]
+                else:
+                    # 如果没有'.'，则直接在末尾添加'_x'或'_y'
+                    new_key_x = k + '_x'
+                    new_key_y = k + '_y'
+
+                state_dict_x[new_key_x] = v
+                state_dict_y[new_key_y] = v
+
+            # 注意在进行位置嵌入和位置偏置表操作时也需要同时对两个字典进行处理
+            if state_dict_x.get('absolute_pos_embed') is not None:
+                absolute_pos_embed = state_dict_x['absolute_pos_embed']
                 N1, L, C1 = absolute_pos_embed.size()
                 N2, C2, H, W = self.absolute_pos_embed.size()
                 if N1 != N2 or C1 != C2 or L != H * W:
                     print_log('Error in loading absolute_pos_embed, pass')
                 else:
-                    state_dict['absolute_pos_embed'] = absolute_pos_embed.view(
+                    state_dict_x['absolute_pos_embed'] = absolute_pos_embed.view(
+                        N2, H, W, C2).permute(0, 3, 1, 2).contiguous()
+                    state_dict_y['absolute_pos_embed'] = absolute_pos_embed.view(
                         N2, H, W, C2).permute(0, 3, 1, 2).contiguous()
 
             # interpolate position bias table if needed
@@ -772,27 +792,32 @@ class TwinSwinTransformer(BaseModule):
                 if 'relative_position_bias_table' in k
             ]
             for table_key in relative_position_bias_table_keys:
+                table_key_x = table_key[:table_key.find('.')] + '_x' + table_key[table_key.find('.'):]
+                table_key_y = table_key[:table_key.find('.')] + '_y' + table_key[table_key.find('.'):]
                 table_pretrained = state_dict[table_key]
-                table_current = self.state_dict()[table_key]
+                table_current = self.state_dict()[table_key_x]  # 假设_x和_y模块的shape是一样的
                 L1, nH1 = table_pretrained.size()
                 L2, nH2 = table_current.size()
                 if nH1 != nH2:
                     print_log(f'Error in loading {table_key}, pass')
                 elif L1 != L2:
-                    S1 = int(L1**0.5)
-                    S2 = int(L2**0.5)
+                    S1 = int(L1 ** 0.5)
+                    S2 = int(L2 ** 0.5)
                     table_pretrained_resized = F.interpolate(
                         table_pretrained.permute(1, 0).reshape(1, nH1, S1, S1),
                         size=(S2, S2),
                         mode='bicubic')
-                    state_dict[table_key] = table_pretrained_resized.view(
+                    state_dict_x[table_key_x] = table_pretrained_resized.view(
+                        nH2, L2).permute(1, 0).contiguous()
+                    state_dict_y[table_key_y] = table_pretrained_resized.view(
                         nH2, L2).permute(1, 0).contiguous()
 
             # load state_dict
-            self.load_state_dict(state_dict, strict=False)
+            self.load_state_dict(state_dict_x, strict=False)
+            self.load_state_dict(state_dict_y, strict=False)
 
     def forward(self, x):
-        # fetch inputs
+        # fetch inputs and split it to 2 modalities
         x, y = torch.split(x, (3, 3), dim=1)
 
         x, xhw_shape = self.patch_embed_x(x)

@@ -7,8 +7,8 @@ pretrained = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/swin/s
 crop_size = (352, 640) # h, w
 data_preprocessor = dict(
     type='SegDataPreProcessor',
-    mean=[0, 0, 0],
-    std=[1, 1, 1],
+    mean=[0, 0, 0, 0, 0, 0], # because inputs has 6 channels, for two modalities are stacked by channels
+    std=[1, 1, 1, 1, 1, 1],
     bgr_to_rgb=True,
     pad_val=0,
     seg_pad_val=255,
@@ -20,8 +20,11 @@ model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,
     backbone=dict(
-        type='SwinTransformer',
+        type='TwinSwinTransformer',
         pretrain_img_size=384,
+        # normal has 3 channels, but depth, tdisp, disp have 1 channels,
+        # not sure if it is suitable to force them to have 3 uniformly.
+        in_channels=3,
         embed_dims=128,
         depths=depths,
         num_heads=[4, 8, 16, 32],
@@ -154,7 +157,8 @@ backbone_embed_multi = dict(lr_mult=0.1, decay_mult=0.0)
 embed_multi = dict(lr_mult=1.0, decay_mult=0.0)
 custom_keys = {
     'backbone': dict(lr_mult=0.1, decay_mult=1.0),
-    'backbone.patch_embed.norm': backbone_norm_multi,
+    'backbone.patch_embed_x.norm': backbone_norm_multi,
+    'backbone.patch_embed_y.norm': backbone_norm_multi,
     'backbone.norm': backbone_norm_multi,
     'absolute_pos_embed': backbone_embed_multi,
     'relative_position_bias_table': backbone_embed_multi,
@@ -162,13 +166,26 @@ custom_keys = {
     'query_feat': embed_multi,
     'level_embed': embed_multi
 }
+# for RGB encoder
 custom_keys.update({
-    f'backbone.stages.{stage_id}.blocks.{block_id}.norm': backbone_norm_multi
+    f'backbone.stages_x.{stage_id}.blocks.{block_id}.norm': backbone_norm_multi
     for stage_id, num_blocks in enumerate(depths)
     for block_id in range(num_blocks)
 })
+# for another encoder
 custom_keys.update({
-    f'backbone.stages.{stage_id}.downsample.norm': backbone_norm_multi
+    f'backbone.stages_y.{stage_id}.blocks.{block_id}.norm': backbone_norm_multi
+    for stage_id, num_blocks in enumerate(depths)
+    for block_id in range(num_blocks)
+})
+# for RGB encoder
+custom_keys.update({
+    f'backbone.stages_x.{stage_id}.downsample.norm': backbone_norm_multi
+    for stage_id in range(len(depths) - 1)
+})
+# for another encoder
+custom_keys.update({
+    f'backbone.stages_y.{stage_id}.downsample.norm': backbone_norm_multi
     for stage_id in range(len(depths) - 1)
 })
 # optimizer
