@@ -1,8 +1,8 @@
 _base_ = [
-    '../_base_/default_runtime.py', '../_base_/datasets/mmcarla_1280x704.py'
+    '../_base_/default_runtime.py', '../_base_/datasets/mmcarla_640x352.py'
 ]
 
-pretrained = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/swin/swin_base_patch4_window12_384_20220317-55b0104a.pth'  # noqa
+pretrained = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/swin/swin_large_patch4_window12_384_22k_20220412-6580f57d.pth' # noqa
 
 crop_size = (352, 640) # h, w
 data_preprocessor = dict(
@@ -25,9 +25,9 @@ model = dict(
         # normal has 3 channels, but depth, tdisp, disp have 1 channels,
         # not sure if it is suitable to force them to have 3 uniformly.
         in_channels=3,
-        embed_dims=128,
+        embed_dims=192,
         depths=depths,
-        num_heads=[4, 8, 16, 32],
+        num_heads=[6, 12, 24, 48],
         window_size=12,
         mlp_ratio=4,
         qkv_bias=True,
@@ -42,7 +42,7 @@ model = dict(
         init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
     decode_head=dict(
         type='TwinFormerHead',
-        in_channels=[256, 512, 1024, 2048], # modified here
+        in_channels=[384, 768, 1536, 3072], # modified here
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,

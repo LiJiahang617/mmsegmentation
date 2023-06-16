@@ -7,13 +7,13 @@ train_pipeline = [
     dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
     dict(
         type='Resize',
-        scale=(1280, 704)),  # Note: w, h instead of h, w
+        scale=(640, 352)),  # Note: w, h instead of h, w
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
     dict(type='LoadMultimodalImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
     dict(type='StackByChannel', keys=('img', 'ano')),
-    dict(type='Resize', scale=(1280, 704)),
+    dict(type='Resize', scale=(640, 352)),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
     dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
