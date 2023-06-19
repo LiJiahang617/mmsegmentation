@@ -829,7 +829,6 @@ class TwinSwinTransformer(BaseModule):
         x = self.drop_after_pos(x)
         y = self.drop_after_pos(y)
 
-        outs = []
         outs_x = []
         outs_y = []
         for i, (stage_x, stage_y) in enumerate(zip(self.stages_x, self.stages_y)):
@@ -845,6 +844,6 @@ class TwinSwinTransformer(BaseModule):
                 outs_x.append(out_x)
                 outs_y.append(out_y)
                 # concat rgb encoder and ano encoder together and feed them to following parts
-                outs = [torch.cat((out_x, out_y), dim=1) for out_x, out_y in zip(outs_x, outs_y)]
+        outs = [torch.cat((out_x, out_y), dim=1) for out_x, out_y in zip(outs_x, outs_y)]
 
         return outs
