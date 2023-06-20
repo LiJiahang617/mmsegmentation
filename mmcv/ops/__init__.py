@@ -40,6 +40,7 @@ from .masked_conv import MaskedConv2d, masked_conv2d
 from .min_area_polygons import min_area_polygons
 from .modulated_deform_conv import (ModulatedDeformConv2d,
                                     ModulatedDeformConv2dPack,
+                                    ModulatedDeformConv2dMask,
                                     modulated_deform_conv2d)
 from .multi_scale_deform_attn import MultiScaleDeformableAttention
 from .nms import batched_nms, nms, nms_match, nms_quadri, nms_rotated, soft_nms
@@ -82,6 +83,7 @@ __all__ = [
     'SoftmaxFocalLoss', 'sigmoid_focal_loss', 'softmax_focal_loss',
     'get_compiler_version', 'get_compiling_cuda_version', 'MaskedConv2d',
     'masked_conv2d', 'ModulatedDeformConv2d', 'ModulatedDeformConv2dPack',
+    'ModulatedDeformConv2dMask',
     'modulated_deform_conv2d', 'batched_nms', 'nms', 'soft_nms', 'nms_match',
     'RoIAlign', 'roi_align', 'RoIPool', 'roi_pool', 'SyncBatchNorm', 'Conv2d',
     'ConvTranspose2d', 'Linear', 'MaxPool2d', 'CrissCrossAttention', 'PSAMask',

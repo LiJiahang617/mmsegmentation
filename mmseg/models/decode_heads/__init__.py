@@ -33,6 +33,8 @@ from .setr_up_head import SETRUPHead
 from .stdc_head import STDCHead
 from .uper_head import UPerHead
 from .twinformer_head import TwinFormerHead
+from .twinformer_tsdecode_head import TwinFormerHeadv2
+from .twinformer_dcnv2_head import TwinFormerHeadv3
 
 __all__ = [
     'FCNHead', 'PSPHead', 'ASPPHead', 'PSAHead', 'NLHead', 'GCHead', 'CCHead',
@@ -42,5 +44,6 @@ __all__ = [
     'SETRMLAHead', 'DPTHead', 'SETRMLAHead', 'SegmenterMaskTransformerHead',
     'SegformerHead', 'ISAHead', 'STDCHead', 'IterativeDecodeHead',
     'KernelUpdateHead', 'KernelUpdator', 'MaskFormerHead', 'Mask2FormerHead',
-    'LightHamHead', 'PIDHead', 'TwinFormerHead'
+    'LightHamHead', 'PIDHead', 'TwinFormerHead', 'TwinFormerHeadv2',
+    'TwinFormerHeadv3'
 ]

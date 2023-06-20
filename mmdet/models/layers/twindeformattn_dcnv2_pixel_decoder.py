@@ -15,11 +15,61 @@ from mmdet.utils import ConfigType, OptMultiConfig
 from ..task_modules.prior_generators import MlvlPointGenerator
 from .positional_encoding import SinePositionalEncoding
 from .transformer import Mask2FormerTransformerEncoder
+from mmcv.ops.modulated_deform_conv import ModulatedDeformConv2dMask
 
 
 @MODELS.register_module()
-class TwinDeformAttnPixelDecoder(BaseModule):
-    """Twin Pixel decoder with multi-scale deformable attention.
+class FeatureSelectionModule(nn.Module):
+    def __init__(self, in_chan, out_chan, norm=None):
+        super(FeatureSelectionModule, self).__init__()
+        self.conv_atten = ConvModule(in_chan, in_chan, kernel_size=1, bias=False, norm_cfg=norm)
+        self.sigmoid = nn.Sigmoid()
+        self.conv = ConvModule(in_chan, out_chan, kernel_size=1, bias=False, norm_cfg=None)
+        self.relu = nn.ReLU(inplace=True)
+
+    def init_weights(self) -> None:
+        """Initialize weights."""
+        caffe2_xavier_init(self.conv_atten, bias=0)
+        caffe2_xavier_init(self.conv, bias=0)
+
+    def forward(self, x):
+        atten = self.sigmoid(self.conv_atten(F.avg_pool2d(x, x.size()[2:])))
+        feat = torch.mul(x, atten)
+        x = x + feat
+        feat = self.relu(self.conv(x))
+        return feat
+
+@MODELS.register_module()
+class FeatureAlign(nn.Module):      # With FSM
+    def __init__(self, in_nc=128, out_nc=128, norm=None):
+        super(FeatureAlign, self).__init__()
+        self.lateral_conv = FeatureSelectionModule(in_nc, out_nc, norm=norm)
+        self.offset = ConvModule(out_nc * 2, out_nc, kernel_size=1, bias=False, norm_cfg=norm)
+        # remove extra_offset_mask=True for convenient
+        self.dcpack_L2 = ModulatedDeformConv2dMask(out_nc, out_nc, kernel_size=3, stride=1,
+                                                   padding=1, dilation=1, deformable_groups=8)
+        self.relu = nn.ReLU(inplace=True)
+
+    def init_weights(self) -> None:
+        """Initialize weights."""
+        caffe2_xavier_init(self.offset, bias=0)
+
+    def forward(self, feat_l, feat_s, cat=False):
+        HW = feat_l.size()[2:]
+        if feat_l.size()[2:] != feat_s.size()[2:]:
+            feat_up = F.interpolate(feat_s, HW, mode='bilinear', align_corners=False)
+        else:
+            feat_up = feat_s
+        feat_arm = self.lateral_conv(feat_l)
+        offset = self.offset(torch.cat([feat_arm, feat_up * 2], dim=1))  # concat for offset by compute the dif
+        feat_align = self.relu(self.dcpack_L2([feat_up, offset]))  # [feat, offset]
+        return feat_align + feat_l
+
+
+@MODELS.register_module()
+class TwinDeformAttnDCNv2PixelDecoder(BaseModule):
+    """Twin Pixel decoder with multi-scale deformable attention and DCNv2
+    to replace FPN structure.
 
     Args:
         in_channels (list[int] | tuple[int]): Number of channels in the
@@ -95,8 +145,9 @@ class TwinDeformAttnPixelDecoder(BaseModule):
         self.level_encoding = nn.Embedding(self.num_encoder_levels,
                                            feat_channels)
 
-        # fpn-like structure
+        # fapn-like structure
         self.lateral_convs = ModuleList()
+        self.align_convs = ModuleList()
         self.output_convs = ModuleList()
         self.use_bias = norm_cfg is None
         # from top to down (low to high resolution)
@@ -110,6 +161,7 @@ class TwinDeformAttnPixelDecoder(BaseModule):
                 bias=self.use_bias,
                 norm_cfg=norm_cfg,
                 act_cfg=None)
+            align_conv = FeatureAlign(feat_channels, feat_channels, norm=norm_cfg)  # ?
             output_conv = ConvModule(
                 feat_channels,
                 feat_channels,
@@ -119,6 +171,7 @@ class TwinDeformAttnPixelDecoder(BaseModule):
                 bias=self.use_bias,
                 norm_cfg=norm_cfg,
                 act_cfg=act_cfg)
+            self.align_convs.append(align_conv)  # ?
             self.lateral_convs.append(lateral_conv)
             self.output_convs.append(output_conv)
 
@@ -251,16 +304,12 @@ class TwinDeformAttnPixelDecoder(BaseModule):
             x.reshape(batch_size, -1, spatial_shapes[i][0],
                       spatial_shapes[i][1]) for i, x in enumerate(outs)
         ]
-        # fpn for the rest features that didn't pass in encoder
+        # fapn for the rest features that didn't pass in encoder
         for i in range(self.num_input_levels - self.num_encoder_levels - 1, -1,
                        -1):
             x = feats[i]
             cur_feat = self.lateral_convs[i](x)
-            y = cur_feat + F.interpolate(
-                outs[-1],
-                size=cur_feat.shape[-2:],
-                mode='bilinear',
-                align_corners=False)
+            y = self.align_convs[i](cur_feat, outs[-1])
             y = self.output_convs[i](y)
             outs.append(y)
         multi_scale_features = outs[:self.num_outs]

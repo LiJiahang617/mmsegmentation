@@ -50,6 +50,8 @@ from .yolo_head import YOLOV3Head
 from .yolof_head import YOLOFHead
 from .yolox_head import YOLOXHead
 from .twinformer_head import TwinFormerHead
+from .twinformer_tsdecode_head import TwinFormerHeadv2
+from .twinformer_dcnv2_head import TwinFormerHeadv3
 
 __all__ = [
     'AnchorFreeHead', 'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption',
@@ -66,5 +68,5 @@ __all__ = [
     'CenterNetUpdateHead', 'RTMDetHead', 'RTMDetSepBNHead', 'CondInstBboxHead',
     'CondInstMaskHead', 'RTMDetInsHead', 'RTMDetInsSepBNHead',
     'BoxInstBboxHead', 'BoxInstMaskHead', 'ConditionalDETRHead', 'DINOHead',
-    'DABDETRHead', 'TwinFormerHead'
+    'DABDETRHead', 'TwinFormerHead', 'TwinFormerHeadv2', 'TwinFormerHeadv3'
 ]

@@ -10,6 +10,7 @@ from .inverted_residual import InvertedResidual
 from .matrix_nms import mask_matrix_nms
 from .msdeformattn_pixel_decoder import MSDeformAttnPixelDecoder
 from .twindeformattn_pixel_decoder import TwinDeformAttnPixelDecoder
+from .twindeformattn_dcnv2_pixel_decoder import TwinDeformAttnDCNv2PixelDecoder, FeatureSelectionModule,FeatureAlign
 from .normed_predictor import NormedConv2d, NormedLinear
 from .pixel_decoder import PixelDecoder, TransformerEncoderPixelDecoder
 from .positional_encoding import (LearnedPositionalEncoding,
@@ -59,5 +60,6 @@ __all__ = [
     'ConditionalDetrTransformerDecoderLayer', 'DinoTransformerDecoder',
     'CdnQueryGenerator', 'Mask2FormerTransformerEncoder',
     'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder',
-    'TwinDeformAttnPixelDecoder'
+    'TwinDeformAttnPixelDecoder', 'TwinDeformAttnDCNv2PixelDecoder',
+    'FeatureSelectionModule', 'FeatureAlign'
 ]
