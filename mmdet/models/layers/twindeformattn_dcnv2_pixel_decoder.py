@@ -25,7 +25,7 @@ class FeatureSelectionModule(nn.Module):
         self.conv_atten = ConvModule(in_chan, in_chan, kernel_size=1, bias=False, norm_cfg=norm)
         self.sigmoid = nn.Sigmoid()
         self.conv = ConvModule(in_chan, out_chan, kernel_size=1, bias=False, norm_cfg=None)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
 
     def init_weights(self) -> None:
         """Initialize weights."""
