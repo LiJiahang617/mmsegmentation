@@ -475,7 +475,7 @@ class DeformableDETR(DetectionTransformer):
                 torch.linspace(
                     0, H - 1, H, dtype=torch.float32, device=memory.device),
                 torch.linspace(
-                    0, W - 1, W, dtype=torch.float32, device=memory.device))
+                    0, W - 1, W, dtype=torch.float32, device=memory.device),  indexing='ij')
             grid = torch.cat([grid_x.unsqueeze(-1), grid_y.unsqueeze(-1)], -1)
 
             scale = torch.cat([valid_W, valid_H], 1).view(bs, 1, 1, 2)
