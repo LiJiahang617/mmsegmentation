@@ -25,7 +25,6 @@ class FeatureSelectionModule(nn.Module):
         self.conv_atten = ConvModule(in_chan, in_chan, kernel_size=1, bias=False, norm_cfg=norm)
         self.sigmoid = nn.Sigmoid()
         self.conv = ConvModule(in_chan, out_chan, kernel_size=1, bias=False, norm_cfg=None)
-        self.relu = nn.ReLU(inplace=False)
 
     def init_weights(self) -> None:
         """Initialize weights."""
@@ -36,7 +35,7 @@ class FeatureSelectionModule(nn.Module):
         atten = self.sigmoid(self.conv_atten(F.avg_pool2d(x, x.size()[2:])))
         feat = torch.mul(x, atten)
         x = x + feat
-        feat = self.relu(self.conv(x))
+        feat = self.conv(x)
         return feat
 
 @MODELS.register_module()
