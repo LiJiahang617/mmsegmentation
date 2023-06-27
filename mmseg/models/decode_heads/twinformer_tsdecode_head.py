@@ -51,7 +51,7 @@ class TwinFormerHeadv2(MMDET_TwinFormerHeadv2):
 
     def _seg_data_to_instance_data(self, batch_data_samples: SampleList):
         """Perform forward propagation to convert paradigm from MMSegmentation
-        to MMDetection to ensure ``MMDET_Mask2FormerHead`` could be called
+        to MMDetection to ensure ``MMDET_TwinFormerHead`` could be called
         normally. Specifically, ``batch_gt_instances`` would be added.
 
         Args:
