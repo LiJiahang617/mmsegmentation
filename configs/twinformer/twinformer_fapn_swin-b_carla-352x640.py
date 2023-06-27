@@ -51,7 +51,7 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.TwinDeformAttnDCNv2PixelDecoder',
+            type='mmdet.TwinDeformAttnDCNv2PixelDecoder', # FaPN is implemented based on DCNv2 ops
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
             act_cfg=dict(type='ReLU'),

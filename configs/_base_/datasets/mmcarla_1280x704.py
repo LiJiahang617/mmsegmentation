@@ -4,7 +4,7 @@ data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_test'
 train_pipeline = [
     dict(type='LoadMultimodalImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
     dict(type='StackByChannel', keys=('img', 'ano')),
-    dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
+    dict(type='LoadCarlaAnnotations'),
     dict(
         type='Resize',
         scale=(1280, 704)),  # Note: w, h instead of h, w
@@ -16,7 +16,7 @@ test_pipeline = [
     dict(type='Resize', scale=(1280, 704)),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
-    dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
+    dict(type='LoadCarlaAnnotations'),
     dict(type='PackSegInputs')
 ]
 train_dataloader = dict(

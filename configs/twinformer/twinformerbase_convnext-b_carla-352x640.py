@@ -1,14 +1,14 @@
 _base_ = [
-    '../_base_/default_runtime.py', '../_base_/datasets/carla_640x352.py'
+    '../_base_/default_runtime.py', '../_base_/datasets/mmcarla_640x352.py'
 ]
-pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_in21k_20220301-262fd037.pth'  # noqa
-# custom_imports = dict(imports='mmpretrain.models', allow_failed_imports=False)
+
+pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_in21k_20220301-262fd037.pth'
 
 crop_size = (352, 640) # h, w
 data_preprocessor = dict(
     type='SegDataPreProcessor',
-    mean=[0, 0, 0],
-    std=[1, 1, 1],
+    mean=[0, 0, 0, 0, 0, 0], # because inputs has 6 channels, for two modalities are stacked by channels
+    std=[1, 1, 1, 1, 1, 1],
     bgr_to_rgb=True,
     pad_val=0,
     seg_pad_val=255,
@@ -19,7 +19,7 @@ model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,
     backbone=dict(
-        type='mmpretrain.ConvNeXt',
+        type='mmpretrain.TwinConvNeXt',
         arch='base',
         out_indices=[0, 1, 2, 3],
         drop_path_rate=0.4,
@@ -29,8 +29,8 @@ model = dict(
             type='Pretrained', checkpoint=pretrained,
             prefix='backbone.')),
     decode_head=dict(
-        type='Mask2FormerHead',
-        in_channels=[128, 256, 512, 1024],
+        type='TwinFormerHead',
+        in_channels=[256, 512, 1024, 2048],  # modified here
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,
@@ -39,7 +39,7 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.MSDeformAttnPixelDecoder',
+            type='mmdet.TwinDeformAttnPixelDecoder',
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
             act_cfg=dict(type='ReLU'),
@@ -170,9 +170,3 @@ default_hooks = dict(
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='SegVisualizationHook', draw=True))
-
-# Default setting for scaling LR automatically
-#   - `enable` means enable scaling LR automatically
-#       or not by default.
-#   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
-# auto_scale_lr = dict(enable=False, base_batch_size=3)
