@@ -1,10 +1,10 @@
 _base_ = [
-    '../_base_/default_runtime.py', '../_base_/datasets/mmcarla_640x352.py'
+    '../_base_/default_runtime.py', '../_base_/datasets/mmkitti_1280x384.py'
 ]
 
-pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-xlarge_3rdparty_in21k_20220301-08aa5ddc.pth'
+pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_in21k_20220301-262fd037.pth'
 
-crop_size = (352, 640) # h, w
+crop_size = (384, 1280) # h, w
 data_preprocessor = dict(
     type='SegDataPreProcessor',
     mean=[0, 0, 0, 0, 0, 0], # because inputs has 6 channels, for two modalities are stacked by channels
@@ -13,14 +13,14 @@ data_preprocessor = dict(
     pad_val=0,
     seg_pad_val=255,
     size=crop_size)
-num_classes = 3
+num_classes = 2
 
 model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,
     backbone=dict(
         type='mmpretrain.TwinConvNeXt',
-        arch='xlarge',
+        arch='base',
         out_indices=[0, 1, 2, 3],
         drop_path_rate=0.4,
         layer_scale_init_value=1.0,
@@ -30,7 +30,7 @@ model = dict(
             prefix='backbone.')),
     decode_head=dict(
         type='TwinFormerHead',
-        in_channels=[512, 1024, 2048, 4096],  # modified here
+        in_channels=[256, 512, 1024, 2048],  # modified here
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,

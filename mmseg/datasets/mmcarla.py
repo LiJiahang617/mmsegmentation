@@ -25,6 +25,8 @@ class MMCarlaDataset(BaseSegDataset):
                  **kwargs) -> None:
         self.modality = modality
         print(f'use {modality} as another modality.')
+        assert self.modality is not None, 'another modality is not setted ' \
+                                          'correctly, please modify your config file!'
         super().__init__(
             img_suffix=img_suffix, seg_map_suffix=seg_map_suffix, **kwargs)
 
@@ -44,7 +46,8 @@ class MMCarlaDataset(BaseSegDataset):
         img_dir = self.data_prefix.get('img_path', None)
         ano_dir = modality_path_map.get(self.modality)
         if ano_dir == None:
-            raise ValueError(f'can not find another modality data in {self.modality}')
+            raise ValueError(f'can not find another modality data in '
+                             f'{self.modality}, please check your dataset organization!')
         ann_dir = self.data_prefix.get('seg_map_path', None)
         if osp.isfile(self.ann_file):
             lines = mmengine.list_from_file(

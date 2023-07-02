@@ -120,6 +120,7 @@ class LoadAnnotations(MMCV_LoadAnnotations):
             gt_semantic_seg_copy = gt_semantic_seg.copy()
             for old_id, new_id in results['label_map'].items():
                 gt_semantic_seg[gt_semantic_seg_copy == old_id] = new_id
+        # gt_seg_map contains gt_label which is single channel
         results['gt_seg_map'] = gt_semantic_seg
         results['seg_fields'].append('gt_seg_map')
 
@@ -181,6 +182,66 @@ class LoadCarlaAnnotations(MMCV_LoadAnnotations):
         label = np.zeros(results['ori_shape'][:2], dtype=np.uint8)  # wrong here
         label[gt_semantic_seg[:, :, 0] == 128] = 1
         label[gt_semantic_seg[:, :, 1] == 255] = 2  # TODO to solve different net label size?
+        results['gt_seg_map'] = label
+        results['seg_fields'].append('gt_seg_map')
+
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'(reduce_zero_label={self.reduce_zero_label}, '
+        repr_str += f"imdecode_backend='{self.imdecode_backend}', "
+        repr_str += f'backend_args={self.backend_args})'
+        return repr_str
+
+
+@TRANSFORMS.register_module()
+class LoadKittiAnnotations(MMCV_LoadAnnotations):
+
+    def __init__(
+        self,
+        reduce_zero_label=None,
+        backend_args=None,
+        imdecode_backend='pillow',
+    ) -> None:
+        super().__init__(
+            with_bbox=False,
+            with_label=False,
+            with_seg=True,
+            with_keypoints=False,
+            imdecode_backend=imdecode_backend,
+            backend_args=backend_args)
+        self.reduce_zero_label = reduce_zero_label
+        if self.reduce_zero_label is not None:
+            warnings.warn('`reduce_zero_label` will be deprecated, '
+                          'if you would like to ignore the zero label, please '
+                          'set `reduce_zero_label=True` when dataset '
+                          'initialized')
+        self.imdecode_backend = imdecode_backend
+
+    def _load_seg_map(self, results: dict) -> None:
+        """Private function to load semantic segmentation annotations.
+
+        Args:
+            results (dict): Result dict from :obj:``mmcv.BaseDataset``.
+
+        Returns:
+            dict: The dict contains loaded semantic segmentation annotations.
+        """
+
+        img_bytes = fileio.get(
+            results['seg_map_path'], backend_args=self.backend_args)
+        gt_semantic_seg = mmcv.imfrombytes(
+            img_bytes, flag='unchanged',
+            backend=self.imdecode_backend).squeeze().astype(np.uint8)
+
+        # reduce zero_label
+        if self.reduce_zero_label is None:
+            self.reduce_zero_label = results['reduce_zero_label']
+        assert self.reduce_zero_label == results['reduce_zero_label'], \
+            'Initialize dataset with `reduce_zero_label` as ' \
+            f'{results["reduce_zero_label"]} but when load annotation ' \
+            f'the `reduce_zero_label` is {self.reduce_zero_label}'
+        label = np.zeros(results['ori_shape'][:2], dtype=np.uint8)  # wrong (bug) ever showed up here
+        label[(gt_semantic_seg[:, :, 0] == 255)&(gt_semantic_seg[:, :, 2] == 255)] = 1
         results['gt_seg_map'] = label
         results['seg_fields'].append('gt_seg_map')
 

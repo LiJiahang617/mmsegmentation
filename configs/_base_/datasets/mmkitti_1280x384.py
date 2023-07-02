@@ -1,26 +1,28 @@
 # dataset settings
-dataset_type = 'MMCarlaDataset'
-data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_test'
+dataset_type = 'MMKittiDataset'
+data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/KITTI'
+sample_scale = (1280, 384)
+
 train_pipeline = [
-    dict(type='LoadMultimodalImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
+    dict(type='LoadKittiImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
     dict(type='StackByChannel', keys=('img', 'ano')),
-    dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
+    dict(type='LoadKittiAnnotations', reduce_zero_label=False),
     dict(
         type='Resize',
-        scale=(640, 352)),  # Note: w, h instead of h, w
+        scale=sample_scale),  # Note: w, h instead of h, w
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
-    dict(type='LoadMultimodalImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
+    dict(type='LoadKittiImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
     dict(type='StackByChannel', keys=('img', 'ano')),
-    dict(type='Resize', scale=(640, 352)),
+    dict(type='Resize', scale=sample_scale),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
-    dict(type='LoadCarlaAnnotations', reduce_zero_label=False),
+    dict(type='LoadKittiAnnotations', reduce_zero_label=False),
     dict(type='PackSegInputs')
 ]
 train_dataloader = dict(
-    batch_size=4,
+    batch_size=1,
     num_workers=16,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -31,12 +33,12 @@ train_dataloader = dict(
         img_suffix='.png',
         modality='normal',
         data_prefix=dict(
-            img_path='images/training',
-            depth_path='depth/training',
-            disp_path='disparity/training',
+            img_path='image_2/training',
+            depth_path='lidar_depth_2/training',
+            disp_path='disp_2/training',
             tdisp_path='tdisp/training', # had an issue in tdisp data, solve it in future
-            normal_path='normal/training',
-            seg_map_path='annotations/training'),
+            normal_path='sne/training',
+            seg_map_path='gt_image_2/training'),
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -50,12 +52,12 @@ val_dataloader = dict(
         img_suffix='.png',
         modality='normal',
         data_prefix=dict(
-            img_path='images/validation',
-            depth_path='depth/validation',
-            disp_path='disparity/validation',
+            img_path='image_2/validation',
+            depth_path='lidar_depth_2/validation',
+            disp_path='disp_2/validation',
             tdisp_path='tdisp/validation',  # had an issue in tdisp data, solve it in future
-            normal_path='normal/validation',
-            seg_map_path='annotations/validation'),
+            normal_path='sne/validation',
+            seg_map_path='gt_image_2/validation'),
         pipeline=test_pipeline))
 test_dataloader = dict(
     batch_size=1,
@@ -69,12 +71,12 @@ test_dataloader = dict(
         img_suffix='.png',
         modality='normal',
         data_prefix=dict(
-            img_path='images/testing',
-            depth_path='depth/testing',
-            disp_path='disparity/testing',
+            img_path='image_2/testing',
+            depth_path='lidar_depth_2/testing',
+            disp_path='disp_2/testing',
             tdisp_path='tdisp/testing',  # had an issue in tdisp data, solve it in future
-            normal_path='normal/testing',
-            seg_map_path='annotations/testing'),
+            normal_path='sne/testing',
+            seg_map_path='gt_image_2/testing'),
         pipeline=test_pipeline))
 
 val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU', 'mFscore'])

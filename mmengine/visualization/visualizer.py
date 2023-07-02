@@ -328,7 +328,7 @@ class Visualizer(ManagerMixin):
         ax.axis(False)
 
         # remove white edges by set subplot margin
-        fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+        fig.subplots_adjust(left=0, right=1-1e-4, bottom=0, top=1-1e-4)
         canvas = FigureCanvasAgg(fig)
         return canvas, fig, ax
 

@@ -14,8 +14,8 @@ class MMKittiDataset(BaseSegDataset):
 
     """
     METAINFO = dict(
-        classes=('background', 'road', 'pothole'),
-        palette=[[0, 0, 0], [128, 64, 128], [0, 255, 0]]
+        classes=('background', 'road'),
+        palette=[[255, 0, 0], [255, 0, 255]]
     )
 
     def __init__(self,
@@ -25,11 +25,13 @@ class MMKittiDataset(BaseSegDataset):
                  **kwargs) -> None:
         self.modality = modality
         print(f'use {modality} as another modality.')
+        assert self.modality is not None, 'another modality is not setted ' \
+                                          'correctly, please modify your config file!'
         super().__init__(
             img_suffix=img_suffix, seg_map_suffix=seg_map_suffix, **kwargs)
 
     def load_data_list(self) -> List[dict]:
-        """Load multimodal-annotation from directory or annotation file.
+        """Load multimodal annotation file path from directory or annotation file.
 
         Returns:
             list[dict]: All data info of dataset.
@@ -44,7 +46,8 @@ class MMKittiDataset(BaseSegDataset):
         img_dir = self.data_prefix.get('img_path', None)
         ano_dir = modality_path_map.get(self.modality)
         if ano_dir == None:
-            raise ValueError(f'can not find another modality data in {self.modality}')
+            raise ValueError(f'can not find another modality data in '
+                             f'{self.modality}, please check your dataset organization!')
         ann_dir = self.data_prefix.get('seg_map_path', None)
         if osp.isfile(self.ann_file):
             lines = mmengine.list_from_file(
@@ -72,7 +75,8 @@ class MMKittiDataset(BaseSegDataset):
                 if ann_dir is not None:
                     seg_map = img.replace(self.img_suffix, self.seg_map_suffix)
                     data_info['seg_map_path'] = osp.join(ann_dir, seg_map)
-                # load another info
+                # load another info, I did not write another modality
+                # dataloader in other case (if:), remember to do this in the future
                 data_info['ano_path'] = osp.join(ano_dir, img)
                 data_info['label_map'] = self.label_map
                 data_info['reduce_zero_label'] = self.reduce_zero_label

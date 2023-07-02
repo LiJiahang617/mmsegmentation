@@ -209,7 +209,183 @@ class LoadMultimodalImageFromFile(BaseTransform):
             self.backend_args = backend_args.copy()
 
     def transform(self, results: dict) -> Optional[dict]:
-        """Functions to load image.
+        """Functions to load Carla image.
+
+        Args:
+            results (dict): Result dict from
+                :class:`mmengine.dataset.BaseDataset`.
+
+        Returns:
+            dict: The dict contains loaded image and meta information.
+        """
+
+        filename = results['img_path']
+        anoname = results['ano_path']
+        try:
+            if self.file_client_args is not None:
+                file_client = fileio.FileClient.infer_client(
+                    self.file_client_args, filename)
+                img_bytes = file_client.get(filename)
+                ano_bytes = file_client.get(anoname)
+            else:
+                img_bytes = fileio.get(
+                    filename, backend_args=self.backend_args)
+                ano_bytes = fileio.get(
+                    anoname, backend_args=self.backend_args)
+            # img that used customfrombytes func is rgb instead of bgr, so it
+            # does not need data+preprocessor to translate it into rgb again
+            # TODO: check if img here is rgb and if data_preprocessor:bgr2rgb work again
+            img = mmcv.customfrombytes(
+                img_bytes, flag='unchanged', backend=self.imdecode_backend)
+            if len(img.shape) < 3:
+                img = np.expand_dims(img, -1)
+            elif len(img.shape) > 3:
+                raise ValueError('RGB image has more than 3 dims, but it should not')
+            ano = mmcv.customfrombytes(
+                ano_bytes, flag='unchanged', backend=self.imdecode_backend).astype(np.float32)
+            if len(ano.shape) < 3 and self.modality != 'normal':
+                ano = np.expand_dims(ano, -1)
+            # in case normal img do not have three dims
+            assert ano.ndim == 3 and ano.dtype == np.float32, \
+                'another image must has 3 dims and float32, ' \
+               f'even if depth/disp, but found {ano.dtype} and {ano.ndim}'
+        except Exception as e:
+            if self.ignore_empty:
+                return None
+            else:
+                raise e
+        # in some cases, images are not read successfully, the img would be
+        # `None`, refer to https://github.com/open-mmlab/mmpretrain/issues/1427
+        assert img is not None, f'failed to load image: {filename}'
+        assert ano is not None, f'failed to load image: {anoname}'
+        if self.to_float32:
+            img = img.astype(np.float32)
+
+        results['img'] = img / 255
+        if self.modality == 'normal':  # in carla dataset, normal img is uint16, multiplied by 65535, so must divided
+            results['ano'] = ano / 65535
+
+        elif self.modality == 'depth':
+            assert ano.shape[2] == 4, f'depth_encode in CarlaDataset should have 4 channels, but found {ano.shape[2]}'
+            scales = np.array([65536.0, 256.0, 1.0, 0]) / (256 ** 3 - 1) * 1000
+            in_meters = np.dot(ano, scales).astype(np.float32)
+            max_depth = np.max(in_meters)
+            min_depth = np.min(in_meters)
+            if max_depth > 12.0:
+                max_depth = 12.0
+                in_meters[in_meters > max_depth] = max_depth
+            epsilon = 1e-7
+            depth_normalized = (in_meters - min_depth) / (max_depth - min_depth + epsilon)
+            depth_normalized_3ch = np.repeat(depth_normalized, 3, axis=2)
+            results['ano'] = depth_normalized_3ch
+        elif self.modality == 'disp' or self.modality == 'tdisp':
+            disp_real = ano.astype(np.float32) / 255
+            max_disp = np.max(disp_real)
+            min_disp = np.min(disp_real)
+            epsilon = 1e-7
+            disp_normalized = (disp_real - min_disp) / (max_disp - min_disp + epsilon)
+            disp_normalized_3ch = np.repeat(disp_normalized, 3, axis=2)
+            results['ano'] = disp_normalized_3ch
+        else:
+            raise ValueError(f'modality only support normal, depth, disp and tdisp now, not include {self.modality}!')
+
+        results['img_shape'] = img.shape[:2]
+        results['ano_shape'] = ano.shape
+        results['ori_shape'] = img.shape[:2]
+        return results
+
+    def __repr__(self):
+        repr_str = (f'{self.__class__.__name__}('
+                    f'ignore_empty={self.ignore_empty}, '
+                    f'to_float32={self.to_float32}, '
+                    f"color_type='{self.color_type}', "
+                    f"modality='{self.modality}', "
+                    f"imdecode_backend='{self.imdecode_backend}', ")
+
+        if self.file_client_args is not None:
+            repr_str += f'file_client_args={self.file_client_args})'
+        else:
+            repr_str += f'backend_args={self.backend_args})'
+
+        return repr_str
+
+
+@TRANSFORMS.register_module()
+class LoadKittiImageFromFile(BaseTransform):
+    """Load kitti multimodal images from file.
+       Note:
+           it is used for kitti dataset, if you change the scene, you should
+           modify some options in it.
+    Required Keys:
+
+    - img_path
+    - ano_path
+    Modified Keys:
+
+    - img
+    - ano
+    - img_shape
+    - ori_shape
+
+    Args:
+        to_float32 (bool): Whether to convert the loaded image to a float32
+            numpy array. If set to False, the loaded image is an uint8 array.
+            Defaults to False.
+        color_type (str): The flag argument for :func:`mmcv.imfrombytes`.
+            Defaults to 'color'.
+        imdecode_backend (str): The image decoding backend type. The backend
+            argument for :func:`mmcv.imfrombytes`.
+            See :func:`mmcv.imfrombytes` for details.
+            Defaults to 'cv2'.
+        file_client_args (dict, optional): Arguments to instantiate a
+            FileClient. See :class:`mmengine.fileio.FileClient` for details.
+            Defaults to None. It will be deprecated in future. Please use
+            ``backend_args`` instead.
+            Deprecated in version 2.0.0rc4.
+        ignore_empty (bool): Whether to allow loading empty image or file path
+            not existent. Defaults to False.
+        backend_args (dict, optional): Instantiates the corresponding file
+            backend. It may contain `backend` key to specify the file
+            backend. If it contains, the file backend corresponding to this
+            value will be used and initialized with the remaining values,
+            otherwise the corresponding file backend will be selected
+            based on the prefix of the file path. Defaults to None.
+            New in version 2.0.0rc4.
+    """
+
+    def __init__(self,
+                 to_float32: bool = True,
+                 color_type: str = 'color',
+                 imdecode_backend: str = 'cv2',
+                 file_client_args: Optional[dict] = None,
+                 ignore_empty: bool = False,
+                 *,
+                 backend_args: Optional[dict] = None,
+                 modality: str = 'normal') -> None:
+        self.ignore_empty = ignore_empty
+        self.to_float32 = to_float32
+        self.color_type = color_type
+        self.imdecode_backend = imdecode_backend
+        # add param named modality
+        self.modality = modality
+
+        self.file_client_args: Optional[dict] = None
+        self.backend_args: Optional[dict] = None
+        if file_client_args is not None:
+            warnings.warn(
+                '"file_client_args" will be deprecated in future. '
+                'Please use "backend_args" instead', DeprecationWarning)
+            if backend_args is not None:
+                raise ValueError(
+                    '"file_client_args" and "backend_args" cannot be set '
+                    'at the same time.')
+
+            self.file_client_args = file_client_args.copy()
+        if backend_args is not None:
+            self.backend_args = backend_args.copy()
+
+    def transform(self, results: dict) -> Optional[dict]:
+        """Functions to load kitti image.
 
         Args:
             results (dict): Result dict from
@@ -258,28 +434,25 @@ class LoadMultimodalImageFromFile(BaseTransform):
             img = img.astype(np.float32)
 
         results['img'] = img / 255
-        if self.modality == 'normal':  # in carla dataset, normal img is uint16, multiplied by 65535, so must divided
+        if self.modality == 'normal':  # in kitti dataset, normal img is uint16, multiplied by 65535, so must divided
             results['ano'] = ano / 65535
 
-        elif self.modality == 'depth':
-            assert ano.shape[2] == 4, f'depth_encode in CarlaDataset should have 4 channels, but found {ano.shape[2]}'
-            scales = np.array([65536.0, 256.0, 1.0, 0]) / (256 ** 3 - 1) * 1000
-            in_meters = np.dot(ano, scales).astype(np.float32)
-            max_depth = np.max(in_meters)
-            min_depth = np.min(in_meters)
-            if max_depth > 12.0:
-                max_depth = 12.0
-                in_meters[in_meters > max_depth] = max_depth
+        elif self.modality == 'depth': # in Kitti dataset, all samples has max_depth 65535, min_depth 0
+            assert ano.shape[2] == 1, f'lidar_depth_2 in KittiDataset should have 1 channels, but found {ano.shape[2]}'
+            max_depth = np.max(ano)
+            min_depth = np.min(ano)
             epsilon = 1e-7
-            depth_normalized = (in_meters - min_depth) / (max_depth - min_depth + epsilon)
-            results['ano'] = depth_normalized
+            depth_normalized = (ano - min_depth) / (max_depth - min_depth + epsilon)
+            depth_normalized_3ch = np.repeat(depth_normalized, 3, axis=2)
+            results['ano'] = depth_normalized_3ch
         elif self.modality == 'disp' or self.modality == 'tdisp':
             disp_real = ano.astype(np.float32) / 255
             max_disp = np.max(disp_real)
             min_disp = np.min(disp_real)
             epsilon = 1e-7
             disp_normalized = (disp_real - min_disp) / (max_disp - min_disp + epsilon)
-            results['ano'] = disp_normalized
+            disp_normalized_3ch = np.repeat(disp_normalized, 3, axis=2)
+            results['ano'] = disp_normalized_3ch
         else:
             raise ValueError(f'modality only support normal, depth, disp and tdisp now, not include {self.modality}!')
 

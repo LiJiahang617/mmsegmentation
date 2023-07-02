@@ -356,7 +356,7 @@ class MultimodalResize(BaseTransform):
                 f'expect scale_factor is float or Tuple(float), but'
                 f'get {type(scale_factor)}')
 
-        warnings.warn(f'this func {self.__class__.__name__} is deprecated by me, considering using it, cause'
+        warnings.warn(f'this func {self.__class__.__name__} is deprecated by Kobe Li, considering using it, cause'
           f'it is not appropriate compared to current methods.')
 
     def _resize_img(self, results: dict) -> None:

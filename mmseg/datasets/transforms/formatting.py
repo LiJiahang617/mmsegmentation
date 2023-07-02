@@ -146,7 +146,7 @@ class PackMultimodalSegInputs(BaseTransform):
                             'flip_direction', 'reduce_zero_label', 'ano_path')):
         self.meta_keys = meta_keys
         self.keys = keys
-        warnings.warn(f'this func {self.__class__.__name__} is deprecated by me,'
+        warnings.warn(f'this func {self.__class__.__name__} is deprecated by Kobe Li,'
                       f' considering using it, cause'
                       f'it is not appropriate compared to current methods')
     def transform(self, results: dict) -> dict:

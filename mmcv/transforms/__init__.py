@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .base import BaseTransform
 from .builder import TRANSFORMS
-from .loading import LoadAnnotations, LoadImageFromFile, LoadMultimodalImageFromFile, StackByChannel
+from .loading import LoadAnnotations, LoadImageFromFile, LoadMultimodalImageFromFile, \
+                     StackByChannel, LoadKittiImageFromFile
 from .processing import (CenterCrop, MultiScaleFlipAug, Normalize, Pad,
                          RandomChoiceResize, RandomFlip, RandomGrayscale,
                          RandomResize, Resize, TestTimeAug)
@@ -14,7 +15,7 @@ except ImportError:
     __all__ = [
         'BaseTransform', 'TRANSFORMS', 'TransformBroadcaster', 'Compose',
         'RandomChoice', 'KeyMapper', 'LoadImageFromFile', 'LoadMultimodalImageFromFile',
-        'LoadAnnotations','StackByChannel',
+        'LoadAnnotations','StackByChannel', 'LoadKittiImageFromFile',
         'Normalize', 'Resize', 'Pad', 'RandomFlip', 'RandomChoiceResize',
         'CenterCrop', 'RandomGrayscale', 'MultiScaleFlipAug', 'RandomResize',
         'RandomApply', 'TestTimeAug'
@@ -28,5 +29,5 @@ else:
         'Normalize', 'Resize', 'Pad', 'ToTensor', 'to_tensor', 'ImageToTensor',
         'RandomFlip', 'RandomChoiceResize', 'CenterCrop', 'RandomGrayscale',
         'MultiScaleFlipAug', 'RandomResize', 'RandomApply', 'TestTimeAug',
-        'StackByChannel',
+        'StackByChannel', 'LoadKittiImageFromFile', 'LoadMultimodalImageFromFile'
     ]
