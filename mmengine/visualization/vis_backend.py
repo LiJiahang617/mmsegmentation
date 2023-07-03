@@ -581,6 +581,9 @@ class TensorboardVisBackend(BaseVisBackend):
                 should be RGB.
             step (int): Global step value to record. Defaults to 0.
         """
+        # backup for confidence map only has 2 dims
+        if len(image.shape) == 2:
+            image = np.expand_dims(image, axis=-1)
         self._tensorboard.add_image(name, image, step, dataformats='HWC')
 
     @force_init_env

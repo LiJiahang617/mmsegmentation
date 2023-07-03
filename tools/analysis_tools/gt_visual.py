@@ -18,14 +18,14 @@ dataset_type = 'cityscapes'
 image = mmcv.imread(
     osp.join(
         osp.dirname(__file__),
-        '../../aachen_000000_000019_leftImg8bit.png'
+        '../../test1/aachen_000000_000019_leftImg8bit.png'
     ),
     'color')
 # need to modify here
 sem_seg = mmcv.imread(
     osp.join(
         osp.dirname(__file__),
-        '../../aachen_000000_000019_gtFine_labelTrainIds.png'  # noqa
+        '../../test1/aachen_000000_000019_gtFine_labelTrainIds.png'  # noqa
     ),
     'unchanged')
 seg_local_visualizer = SegLocalVisualizer(

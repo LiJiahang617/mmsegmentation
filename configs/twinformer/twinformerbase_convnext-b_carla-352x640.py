@@ -169,4 +169,4 @@ default_hooks = dict(
         type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHook', draw=True))
+    visualization=dict(type='SegVisualizationHook', interval=1, draw=True))

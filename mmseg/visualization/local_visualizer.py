@@ -42,8 +42,8 @@ class SegLocalVisualizer(Visualizer):
         >>> import numpy as np
         >>> import torch
         >>> from mmengine.structures import PixelData
-        >>> from mmseg.data import SegDataSample
-        >>> from mmseg.engine.visualization import SegLocalVisualizer
+        >>> from mmseg.structures import SegDataSample
+        >>> from mmseg.visualization import SegLocalVisualizer
 
         >>> seg_local_visualizer = SegLocalVisualizer()
         >>> image = np.random.randint(0, 256,
@@ -155,7 +155,7 @@ class SegLocalVisualizer(Visualizer):
             name: str,
             image: np.ndarray,
             data_sample: Optional[SegDataSample] = None,
-            draw_gt: bool = True,
+            draw_gt: bool = False,
             draw_pred: bool = True,
             show: bool = False,
             wait_time: float = 0,
@@ -227,5 +227,32 @@ class SegLocalVisualizer(Visualizer):
 
         if out_file is not None:
             mmcv.imwrite(mmcv.bgr2rgb(drawn_img), out_file)
+        else:
+            self.add_image(name, drawn_img, step)
+
+    @master_only
+    def draw_confidence_map(
+            self,
+            name: str,
+            data_sample: Optional[SegDataSample] = None,
+            show: bool = False,
+            wait_time: float = 0,
+            out_file: Optional[str] = None,
+            step: int = 0) -> None:
+        """Draw Confidence Map for Kitti Road Dataset and Carla Dataset, not suitable for other dataset
+           because classes order.
+        """
+        seg_logits = data_sample.seg_logits.data.clone().cpu().numpy()
+        conf_map = np.true_divide(seg_logits[1], seg_logits[0] + seg_logits[1])
+        conf_map = np.floor(255 * (conf_map - conf_map.min()) / (conf_map.max() - conf_map.min()))
+        conf_map = conf_map.astype(np.uint8)
+
+        drawn_img = conf_map
+
+        if show:
+            self.show(drawn_img, win_name=name, wait_time=wait_time)
+
+        if out_file is not None:
+            mmcv.imwrite(drawn_img, out_file)
         else:
             self.add_image(name, drawn_img, step)

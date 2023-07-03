@@ -221,7 +221,11 @@ default_hooks = dict(
         type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHookplus', draw=True))
+    # if you want to visualize predict results during testing, modify this hook
+    # SegVisualizationHook is for draw predict results (upon image) and
+    # SegVisualizationHookplus is for draw pure confidence map
+    # note: they could not be added at the same time!
+    visualization=dict(type='SegVisualizationHookplus', interval=1, draw=True))
 
 # Default setting for scaling LR automatically
 #   - `enable` means enable scaling LR automatically

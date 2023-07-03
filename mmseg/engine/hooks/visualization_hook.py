@@ -88,7 +88,8 @@ class SegVisualizationHook(Hook):
                     img_path, backend_args=self.backend_args)
                 img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
                 window_name = f'{mode}_{osp.basename(img_path)}'
-
+                # modified by Kobe Li because it was not suitable here
+                window_name = window_name.split('.')[0]
                 self._visualizer.add_datasample(
                     window_name,
                     img,
@@ -148,13 +149,14 @@ class SegVisualizationHookplus(Hook):
                           'effect. The results will NOT be '
                           'visualized or stored.')
 
-    def before_train(self, runner: Runner) -> None:
-        """Call add_graph method of visualizer.
-
-        Args:
-            runner (Runner): The runner of the training process.
-        """
-        self._visualizer.add_graph(runner.model, None)
+    # TODO: try to solve graditude visualization with this method
+    # def before_train(self, runner: Runner) -> None:
+    #     """Call add_graph method of visualizer.
+    #
+    #     Args:
+    #         runner (Runner): The runner of the training process.
+    #     """
+    #     self._visualizer.add_graph(runner.model, None)
 
     def _after_iter(self,
                     runner: Runner,
@@ -181,10 +183,10 @@ class SegVisualizationHookplus(Hook):
                     img_path, backend_args=self.backend_args)
                 img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
                 window_name = f'{mode}_{osp.basename(img_path)}'
-
-                self._visualizer.add_datasample(
+                # modified by Kobe Li because it was not suitable here
+                window_name = window_name.split('.')[0]
+                self._visualizer.draw_confidence_map(
                     window_name,
-                    img,
                     data_sample=output,
                     show=self.show,
                     wait_time=self.wait_time,
