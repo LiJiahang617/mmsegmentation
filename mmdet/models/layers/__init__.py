@@ -10,6 +10,8 @@ from .inverted_residual import InvertedResidual
 from .matrix_nms import mask_matrix_nms
 from .msdeformattn_pixel_decoder import MSDeformAttnPixelDecoder
 from .twindeformattn_pixel_decoder import TwinDeformAttnPixelDecoder
+from .twin_befenhance_pixel_decoder import TwinBEnhancedPixelDecoder
+from .twin_aftenhance_pixel_decoder import TwinAEnhancedPixelDecoder
 from .twindeformattn_dcnv2_pixel_decoder import TwinDeformAttnDCNv2PixelDecoder, FeatureSelectionModule,FeatureAlign
 from .normed_predictor import NormedConv2d, NormedLinear
 from .pixel_decoder import PixelDecoder, TransformerEncoderPixelDecoder
@@ -61,5 +63,6 @@ __all__ = [
     'CdnQueryGenerator', 'Mask2FormerTransformerEncoder',
     'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder',
     'TwinDeformAttnPixelDecoder', 'TwinDeformAttnDCNv2PixelDecoder',
-    'FeatureSelectionModule', 'FeatureAlign'
+    'FeatureSelectionModule', 'TwinBEnhancedPixelDecoder',
+    'TwinAEnhancedPixelDecoder'
 ]
