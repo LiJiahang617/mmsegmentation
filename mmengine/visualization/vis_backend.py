@@ -253,9 +253,15 @@ class LocalVisBackend(BaseVisBackend):
             step (int): Global step value to record. Defaults to 0.
         """
         assert image.dtype == np.uint8
-        drawn_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        if len(image.shape) == 3:
+            drawn_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        elif len(image.shape) == 2:
+            drawn_image = image
+        else:
+            raise ValueError(f'image has {len(image.shape)} dims !')
         os.makedirs(self._img_save_dir, exist_ok=True)
-        save_file_name = f'{name}_{step}.png'
+        # modified here by Kobe Li to submit Kitti Benchmark
+        save_file_name = f'{name}.png'
         cv2.imwrite(osp.join(self._img_save_dir, save_file_name), drawn_image)
 
     @force_init_env

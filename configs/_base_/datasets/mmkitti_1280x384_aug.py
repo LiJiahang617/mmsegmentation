@@ -19,7 +19,6 @@ test_pipeline = [
     dict(type='Resize', scale=sample_scale),
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
-    dict(type='LoadKittiAnnotations', reduce_zero_label=False),
     dict(type='PackSegInputs')
 ]
 train_dataloader = dict(
@@ -81,4 +80,8 @@ test_dataloader = dict(
         pipeline=test_pipeline))
 
 val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU', 'mFscore'])
-test_evaluator = val_evaluator
+test_evaluator = dict(
+    type='IoUMetric',
+    iou_metrics=['mIoU', 'mFscore'],
+    format_only=True,
+    output_dir='work_dirs/format_results')

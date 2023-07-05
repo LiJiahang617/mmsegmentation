@@ -101,8 +101,8 @@ class SegVisualizationHook(Hook):
 
 @HOOKS.register_module()
 class SegVisualizationHookplus(Hook):
-    """Segmentation Visualization Hook. Used to visualize validation and
-    testing process prediction results.
+    """Segmentation Visualization Hookplus (customed by Kobe Li). Suitable to submit
+    prediction results for Kitti Road Benchmark.
 
     In the testing phase:
 
@@ -123,8 +123,8 @@ class SegVisualizationHookplus(Hook):
     """
 
     def __init__(self,
-                 draw: bool = False,
-                 interval: int = 50,
+                 draw: bool = True,
+                 interval: int = 1,
                  show: bool = False,
                  wait_time: float = 0.,
                  backend_args: Optional[dict] = None):
@@ -182,9 +182,10 @@ class SegVisualizationHookplus(Hook):
                 img_bytes = fileio.get(
                     img_path, backend_args=self.backend_args)
                 img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
-                window_name = f'{mode}_{osp.basename(img_path)}'
+                window_name = f'{osp.basename(img_path)}'
                 # modified by Kobe Li because it was not suitable here
                 window_name = window_name.split('.')[0]
+                # window_name = window_name.split('_')[0] + '_road_' + window_name.split('_')[1]
                 self._visualizer.draw_confidence_map(
                     window_name,
                     data_sample=output,
