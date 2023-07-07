@@ -1,5 +1,4 @@
-_base_ = [
-    '../_base_/default_runtime.py', '../_base_/datasets/mmcarla_640x352.py'
+_base_ = ['../_base_/datasets/mmcarla_640x352.py'
 ]
 
 pretrained = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/swin/swin_base_patch4_window12_384_20220317-55b0104a.pth'  # noqa
@@ -232,3 +231,20 @@ default_hooks = dict(
 #       or not by default.
 #   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
 # auto_scale_lr = dict(enable=False, base_batch_size=3)
+default_scope = 'mmseg'
+env_cfg = dict(
+    cudnn_benchmark=True,
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
+    dist_cfg=dict(backend='nccl'),
+)
+vis_backends = [dict(type='LocalVisBackend'),
+                dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer", name="aftenhance_swin-b_carla")),
+]
+visualizer = dict(
+    type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')
+log_processor = dict(window_size=10, by_epoch=True, custom_cfg=None, num_digits=4)
+log_level = 'INFO'
+load_from = None
+resume = False
+
+tta_model = dict(type='SegTTAModel')
