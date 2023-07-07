@@ -1,6 +1,5 @@
 _base_ = [
-    '../_base_/datasets/carla_640x352.py', '../_base_/default_runtime.py',
-    '../_base_/schedules/schedule_160k.py'
+    '../_base_/datasets/carla_640x352.py', '../_base_/default_runtime.py'
 ]
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 crop_size = (352, 640) # h, w
@@ -35,7 +34,7 @@ model = dict(
                      2048],  # input channels of pixel_decoder modules
         feat_channels=256,
         in_index=[0, 1, 2, 3],
-        num_classes=150,
+        num_classes=num_classes,
         out_channels=256,
         num_queries=100,
         pixel_decoder=dict(
@@ -115,15 +114,12 @@ model = dict(
 )
 # optimizer
 optimizer = dict(
-    type='AdamW', lr=0.0001, betas=(0.9, 0.999), weight_decay=0.0001)
+    type='AdamW', lr=0.0001, weight_decay=0.05, eps=1e-8, betas=(0.9, 0.999))
 optim_wrapper = dict(
-    _delete_=True,
     type='OptimWrapper',
     optimizer=optimizer,
-    clip_grad=dict(max_norm=0.01, norm_type=2),
-    paramwise_cfg=dict(custom_keys={
-        'backbone': dict(lr_mult=0.1),
-    }))
+    clip_grad=dict(max_norm=5.0))
+
 # learning policy
 param_scheduler = [
     dict(
@@ -131,11 +127,20 @@ param_scheduler = [
         eta_min=0,
         power=0.9,
         begin=0,
-        end=160000,
-        by_epoch=False)
+        end=50,
+        by_epoch=True)
 ]
-
-# In MaskFormer implementation we use batch size 2 per GPU as default
-train_dataloader = dict(batch_size=2, num_workers=2)
-val_dataloader = dict(batch_size=1, num_workers=4)
-test_dataloader = val_dataloader
+# training schedule
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=50, val_begin=1, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+default_hooks = dict(
+    timer=dict(type='IterTimerHook'),
+    logger=dict(type='LoggerHook', interval=50, log_metric_by_epoch=True),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    checkpoint=dict(
+        type='CheckpointHook', by_epoch=True, interval=5,
+        save_best='mIoU'),
+    sampler_seed=dict(type='DistSamplerSeedHook'),
+    visualization=dict(type='SegVisualizationHook', draw=True))
