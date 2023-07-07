@@ -29,7 +29,22 @@ class Recorder:
         self._data_buffer = list()
 
     def record_data_hook(self, model: nn.Module, input: Type, output: Type):
-        self.data_buffer.append(output)
+        if len(output.shape) == 3:
+            if output.shape[1] == 14080:
+                h, w = (88,160)
+                output = output.reshape(-1, output.shape[2], h, w)
+            elif output.shape[1] == 220:
+                h, w = (11, 20)
+                output = output.reshape(-1, output.shape[2], h, w)
+            elif output.shape[1] == 3520:
+                h, w = (44, 80)
+                output = output.reshape(-1, output.shape[2], h, w)
+            elif output.shape[1] == 880:
+                h, w = (22, 40)
+                output = output.reshape(-1, output.shape[2], h, w)
+            self.data_buffer.append(output)
+        else:
+            self.data_buffer.append(output)
 
     def __exit__(self, *args, **kwargs):
         pass
@@ -95,9 +110,9 @@ def inference_multimodel(img: ImageType, ano: ImageType,
 
     return results if is_batch else results[0]
 
-def visualize(args, model, recorder, result):
+def visualize(args, model, recorder, result, source):
     seg_visualizer = SegLocalVisualizer(
-        vis_backends=[dict(type='WandbVisBackend')],
+        vis_backends=[dict(type='LocalVisBackend')],
         save_dir='temp_dir',
         alpha=0.5)
     seg_visualizer.dataset_meta = dict(
@@ -121,11 +136,13 @@ def visualize(args, model, recorder, result):
         show=False)
 
     # add feature map to wandb visualizer
+    module_list = list(source.keys())
     for i in range(len(recorder.data_buffer)):
+        module = module_list[i]
         feature = recorder.data_buffer[i][0]  # remove the batch
         drawn_img = seg_visualizer.draw_featmap(
-            feature, image, channel_reduction='select_max')
-        seg_visualizer.add_image(f'feature_map{i}', drawn_img)
+            feature, image, channel_reduction='squeeze_mean')
+        seg_visualizer.add_image(f'{module}', drawn_img)
 
     if args.gt_mask:
         sem_seg = mmcv.imread(args.gt_mask, 'unchanged')
@@ -179,7 +196,11 @@ def main():
     for name, module in model.named_modules():
         print(name)
 
-    source = ['decode_head.pixel_decoder.output_convs.0.activate'
+    source = [
+              'backbone.norm_x0',
+              'backbone.norm_y0',
+              'backbone.norm_x3',
+              'backbone.norm_y3'
     ]
     source = dict.fromkeys(source)
 
@@ -197,7 +218,7 @@ def main():
         # test a single image, and record feature map to data_buffer
         result = inference_multimodel(args.img, args.ano, model)
 
-    visualize(args, model, recorder, result)
+    visualize(args, model, recorder, result, source)
 
 
 if __name__ == '__main__':
