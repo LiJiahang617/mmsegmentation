@@ -226,11 +226,7 @@ default_hooks = dict(
     # note: they could not be added at the same time!
     visualization=dict(type='SegVisualizationHookplus', interval=1, draw=True))
 
-# Default setting for scaling LR automatically
-#   - `enable` means enable scaling LR automatically
-#       or not by default.
-#   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
-# auto_scale_lr = dict(enable=False, base_batch_size=3)
+# Runtime configs
 default_scope = 'mmseg'
 env_cfg = dict(
     cudnn_benchmark=True,
