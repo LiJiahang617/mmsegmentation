@@ -124,3 +124,4 @@ test1/ann_r50-d8_512x1024_40k_cityscapes_20200605_095211-049fc292.pth
 
 temp_dir
 test1
+tools/kitti_benchmark

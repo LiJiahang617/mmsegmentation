@@ -141,8 +141,9 @@ def visualize(args, model, recorder, result, source):
         module = module_list[i]
         feature = recorder.data_buffer[i][0]  # remove the batch
         drawn_img = seg_visualizer.draw_featmap(
-            feature, image, channel_reduction='squeeze_mean')
-        seg_visualizer.add_image(f'{module}', drawn_img)
+            feature, image, channel_reduction=None, topk=8, arrangement=(4, 2))
+        seg_visualizer.show(drawn_img)
+        # seg_visualizer.add_image(f'{module}', drawn_img)
 
     if args.gt_mask:
         sem_seg = mmcv.imread(args.gt_mask, 'unchanged')
@@ -197,9 +198,9 @@ def main():
         print(name)
 
     source = [
-              'backbone.norm_x0',
-              'backbone.norm_y0',
-              'backbone.norm_x3',
+              # 'backbone.norm_x0',
+              # 'backbone.norm_y0',
+              # 'backbone.norm_x3',
               'backbone.norm_y3'
     ]
     source = dict.fromkeys(source)
