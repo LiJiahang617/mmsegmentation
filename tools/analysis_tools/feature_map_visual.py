@@ -50,7 +50,6 @@ class Recorder:
         pass
 
 
-
 def _preprare_mulitmodal_data(imgs, anos, model):
 
     cfg = model.cfg

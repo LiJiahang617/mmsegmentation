@@ -240,7 +240,7 @@ class SegLocalVisualizer(Visualizer):
             out_file: Optional[str] = None,
             step: int = 0) -> None:
         """Draw Confidence Map for Kitti Road Dataset and Carla Dataset, not suitable for other dataset
-           because classes order.
+           because of classes order.
         """
         seg_logits = data_sample.seg_logits.data.clone().cpu().numpy()
         conf_map = np.true_divide(seg_logits[1], seg_logits[0] + seg_logits[1])
