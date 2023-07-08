@@ -469,7 +469,7 @@ class TwinConvNeXt(BaseBackbone):
         # concat rgb encoder and ano encoder together and feed them to following parts
         outs = [torch.cat((out_x, out_y), dim=1) for out_x, out_y in zip(outs_x, outs_y)]
 
-        return tuple(outs)
+        return outs
 
     def _freeze_stages(self):
         for i in range(self.frozen_stages):
