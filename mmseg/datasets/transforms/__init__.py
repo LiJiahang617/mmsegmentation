@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .formatting import (PackSegInputs, PackMultimodalSegInputs)
 from .loading import (LoadAnnotations, LoadBiomedicalAnnotation,LoadCarlaAnnotations,
-                      LoadKittiAnnotations,
+                      LoadKittiAnnotations, LoadOrfdAnnotations,
                       LoadBiomedicalData, LoadBiomedicalImageFromFile,
                       LoadImageFromNDArray)
 # yapf: disable
@@ -23,5 +23,5 @@ __all__ = [
     'LoadBiomedicalAnnotation', 'LoadBiomedicalData', 'GenerateEdge',
     'ResizeShortestEdge', 'BioMedicalGaussianNoise', 'BioMedicalGaussianBlur',
     'BioMedical3DRandomFlip', 'BioMedicalRandomGamma', 'BioMedical3DPad',
-    'RandomRotFlip', 'LoadKittiAnnotations'
+    'RandomRotFlip', 'LoadKittiAnnotations', 'LoadOrfdAnnotations'
 ]

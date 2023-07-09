@@ -2,7 +2,7 @@
 from .base import BaseTransform
 from .builder import TRANSFORMS
 from .loading import LoadAnnotations, LoadImageFromFile, LoadMultimodalImageFromFile, \
-                     StackByChannel, LoadKittiImageFromFile
+                     StackByChannel, LoadKittiImageFromFile, LoadOrfdImageFromFile
 from .processing import (CenterCrop, MultiScaleFlipAug, Normalize, Pad,
                          RandomChoiceResize, RandomFlip, RandomGrayscale,
                          RandomResize, Resize, TestTimeAug)

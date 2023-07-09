@@ -24,6 +24,7 @@ from .synapse import SynapseDataset
 from .carla import CarlaDataset
 from .mmcarla import MMCarlaDataset
 from .mmkitti import MMKittiDataset
+from . mmorfd import MMOrfdDataset
 # yapf: disable
 from .transforms import (CLAHE, AdjustGamma, BioMedical3DPad,
                          BioMedical3DRandomCrop, BioMedical3DRandomFlip,
@@ -55,5 +56,5 @@ __all__ = [
     'BioMedicalRandomGamma', 'BioMedical3DPad', 'RandomRotFlip',
     'SynapseDataset', 'REFUGEDataset', 'MapillaryDataset_v1',
     'MapillaryDataset_v2', 'CarlaDataset', 'MMCarlaDataset',
-    'MMKittiDataset'
+    'MMKittiDataset', 'MMOrfdDataset'
 ]
