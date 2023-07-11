@@ -2,7 +2,8 @@
 from .base import BaseTransform
 from .builder import TRANSFORMS
 from .loading import LoadAnnotations, LoadImageFromFile, LoadMultimodalImageFromFile, \
-                     StackByChannel, LoadKittiImageFromFile, LoadOrfdImageFromFile
+                     StackByChannel, LoadKittiImageFromFile, LoadOrfdImageFromFile, \
+                     LoadCityscapesImageFromFile
 from .processing import (CenterCrop, MultiScaleFlipAug, Normalize, Pad,
                          RandomChoiceResize, RandomFlip, RandomGrayscale,
                          RandomResize, Resize, TestTimeAug)
@@ -18,7 +19,8 @@ except ImportError:
         'LoadAnnotations','StackByChannel', 'LoadKittiImageFromFile',
         'Normalize', 'Resize', 'Pad', 'RandomFlip', 'RandomChoiceResize',
         'CenterCrop', 'RandomGrayscale', 'MultiScaleFlipAug', 'RandomResize',
-        'RandomApply', 'TestTimeAug'
+        'RandomApply', 'TestTimeAug', 'LoadCityscapesImageFromFile',
+        'LoadOrfdImageFromFile',
     ]
 else:
     from .formatting import ImageToTensor, ToTensor, to_tensor
@@ -29,5 +31,6 @@ else:
         'Normalize', 'Resize', 'Pad', 'ToTensor', 'to_tensor', 'ImageToTensor',
         'RandomFlip', 'RandomChoiceResize', 'CenterCrop', 'RandomGrayscale',
         'MultiScaleFlipAug', 'RandomResize', 'RandomApply', 'TestTimeAug',
-        'StackByChannel', 'LoadKittiImageFromFile', 'LoadMultimodalImageFromFile'
+        'StackByChannel', 'LoadKittiImageFromFile', 'LoadMultimodalImageFromFile',
+        'LoadCityscapesImageFromFile', 'LoadOrfdImageFromFile'
     ]

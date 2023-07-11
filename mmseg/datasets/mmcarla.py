@@ -1,9 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
+from typing import List
 
 from mmseg.registry import DATASETS
 from .basesegdataset import BaseSegDataset
-from typing import List
+
 import mmengine
 import mmengine.fileio as fileio
 

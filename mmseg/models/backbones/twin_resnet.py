@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -9,6 +10,8 @@ from mmengine.model import BaseModule
 from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
 from mmengine.runner import CheckpointLoader
 from mmengine.logging import print_log
+from mmengine.model.weight_init import (constant_init, trunc_normal_,
+                                        trunc_normal_init)
 
 from mmseg.registry import MODELS
 from ..utils import ResLayer
@@ -552,6 +555,62 @@ class TwinResNet(BaseModule):
 
         self.feat_dim = self.block.expansion * base_channels * 2 ** (
                 len(self.stage_blocks) - 1)
+
+    def init_weights(self, pretrained=None):
+        if self.init_cfg is None:
+            # weight initialization
+            print_log(f'No pre-trained weights for {self.__class__.__name__}, training start from scratch')
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    trunc_normal_init(m, std=.02, bias=0.)
+                elif isinstance(m, nn.LayerNorm):
+                    constant_init(m, val=1.0, bias=0.)
+        else:
+            assert 'checkpoint' in self.init_cfg, f'Only support ' \
+                                                  f'specify `Pretrained` in ' \
+                                                  f'`init_cfg` in ' \
+                                                  f'{self.__class__.__name__} '
+            # load pre-trained weights
+            print_log(f'Load pre-trained weights from {pretrained}')
+            ckpt = CheckpointLoader.load_checkpoint(
+                self.init_cfg['checkpoint'], logger=None, map_location='cpu')
+            if 'state_dict' in ckpt:
+                state_dict = ckpt['state_dict']
+            elif 'model' in ckpt:
+                state_dict = ckpt['model']
+            else:
+                state_dict = ckpt
+
+            state_dict_x = OrderedDict()
+            state_dict_y = OrderedDict()
+
+            for k, v in state_dict.items():
+                if k.startswith('backbone.'):
+                    state_dict[k[9:]] = v
+                else:
+                    state_dict[k] = v
+
+            for k, v in state_dict.items():
+                # add suffixes
+                if '_x' in k:
+                    state_dict_x[k] = v
+                elif '_y' in k:
+                    state_dict_y[k] = v
+
+            missing_keys_x, unexpected_keys_x = self.load_state_dict(state_dict_x, strict=False)
+            missing_keys_y, unexpected_keys_y = self.load_state_dict(state_dict_y, strict=False)
+
+            if len(missing_keys_x) > 0 or len(unexpected_keys_x) > 0:
+                print_log(
+                    f'Missing keys when loading pretrained weights for {self.__class__.__name__}_x: {missing_keys_x}')
+                print_log(
+                    f'Unexpected keys when loading pretrained weights for {self.__class__.__name__}_x: {unexpected_keys_x}')
+
+            if len(missing_keys_y) > 0 or len(unexpected_keys_y) > 0:
+                print_log(
+                    f'Missing keys when loading pretrained weights for {self.__class__.__name__}_y: {missing_keys_y}')
+                print_log(
+                    f'Unexpected keys when loading pretrained weights for {self.__class__.__name__}_y: {unexpected_keys_y}')
 
     def make_stage_plugins(self, plugins, stage_idx):
         """make plugins for ResNet 'stage_idx'th stage .

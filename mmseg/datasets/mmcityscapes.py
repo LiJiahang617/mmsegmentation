@@ -1,28 +1,41 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
+from typing import List
 
 from mmseg.registry import DATASETS
 from .basesegdataset import BaseSegDataset
-from typing import List
+
 import mmengine
 import mmengine.fileio as fileio
 
 
 @DATASETS.register_module()
-class MMKittiDataset(BaseSegDataset):
-    """MMKitti dataset.
+class MMCityscapesDataset(BaseSegDataset):
+    """MultiModal Cityscapes dataset.
 
+    The ``img_suffix`` is fixed to '_leftImg8bit.png', ``seg_map_suffix`` is
+    fixed to '_gtFine_labelTrainIds.png' and ``ano_suffix`` is fixed to '_normal.jpg'
+    for MMCityscapes dataset.
     """
     METAINFO = dict(
-        classes=('background', 'road'),
-        palette=[[255, 0, 0], [255, 0, 255]]
-    )
+        classes=('road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
+                 'traffic light', 'traffic sign', 'vegetation', 'terrain',
+                 'sky', 'person', 'rider', 'car', 'truck', 'bus', 'train',
+                 'motorcycle', 'bicycle'),
+        palette=[[128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156],
+                 [190, 153, 153], [153, 153, 153], [250, 170,
+                                                    30], [220, 220, 0],
+                 [107, 142, 35], [152, 251, 152], [70, 130, 180],
+                 [220, 20, 60], [255, 0, 0], [0, 0, 142], [0, 0, 70],
+                 [0, 60, 100], [0, 80, 100], [0, 0, 230], [119, 11, 32]])
 
     def __init__(self,
-                 img_suffix='.png',
-                 seg_map_suffix='.png',
+                 img_suffix='_leftImg8bit.png',
+                 ano_suffix='_normal.jpg',
+                 seg_map_suffix='_gtFine_labelTrainIds.png',
                  modality=None,
                  **kwargs) -> None:
+        self.ano_suffix = ano_suffix
         self.modality = modality
         print(f'use {modality} as another modality.')
         assert self.modality is not None, 'another modality is not setted ' \
@@ -31,16 +44,15 @@ class MMKittiDataset(BaseSegDataset):
             img_suffix=img_suffix, seg_map_suffix=seg_map_suffix, **kwargs)
 
     def load_data_list(self) -> List[dict]:
-        """Load multimodal annotation file path from directory or annotation file.
+        """Load multimodal-annotation from directory or annotation file.
 
         Returns:
             list[dict]: All data info of dataset.
         """
         data_list = []
         modality_path_map = {
-            'depth': self.data_prefix.get('depth_path', None),
             'disp': self.data_prefix.get('disp_path', None),
-            'tdisp': self.data_prefix.get('tdisp_path', None),
+            # may add tdisp data here future
             'normal': self.data_prefix.get('normal_path', None)
         }
         img_dir = self.data_prefix.get('img_path', None)
@@ -75,9 +87,9 @@ class MMKittiDataset(BaseSegDataset):
                 if ann_dir is not None:
                     seg_map = img.replace(self.img_suffix, self.seg_map_suffix)
                     data_info['seg_map_path'] = osp.join(ann_dir, seg_map)
-                # load another info, I did not write another modality
-                # dataloader in other case (if:), remember to do this in the future
-                data_info['ano_path'] = osp.join(ano_dir, img)
+                # load another info
+                ano = img.replace(self.img_suffix, self.ano_suffix)
+                data_info['ano_path'] = osp.join(ano_dir, ano)
                 data_info['label_map'] = self.label_map
                 data_info['reduce_zero_label'] = self.reduce_zero_label
                 data_info['seg_fields'] = []
