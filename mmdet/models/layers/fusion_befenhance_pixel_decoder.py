@@ -19,7 +19,7 @@ from .transformer import Mask2FormerTransformerEncoder
 
 # feature enhanced with residential connection before feature selection conv
 class FeatureEnhanceModule(BaseModule):
-    """Feature Enhance Module (FEM)"""
+    """Feature Enhance Module (FEM) before"""
     def __init__(self, in_chan, out_chan, norm=None):
         super(FeatureEnhanceModule, self).__init__()
         self.conv_atten = ConvModule(in_chan, in_chan, kernel_size=1, bias=False, norm_cfg=norm)
@@ -87,7 +87,7 @@ class FFM(nn.Module):
 
 
 @MODELS.register_module()
-class TwinFuseEnhancePixelDecoder(BaseModule):
+class TwinFuseBeforeEnhancePixelDecoder(BaseModule):
     """Twin Pixel decoder with multi-scale deformable attention.
 
     Args:

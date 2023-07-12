@@ -13,6 +13,15 @@ train_pipeline = [
     dict(type='RandomFlip', prob=0.5),
     dict(type='PackSegInputs')
 ]
+val_pipeline = [
+    dict(type='LoadKittiImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
+    dict(type='StackByChannel', keys=('img', 'ano')),
+    dict(type='Resize', scale=sample_scale),
+    # add loading annotation after ``Resize`` because ground truth
+    # does not need to do resize data transform
+    dict(type='LoadKittiAnnotations', reduce_zero_label=False),
+    dict(type='PackSegInputs')
+]
 test_pipeline = [
     dict(type='LoadKittiImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
     dict(type='StackByChannel', keys=('img', 'ano')),
@@ -58,7 +67,7 @@ val_dataloader = dict(
             tdisp_path='tdisp/validation',  # had an issue in tdisp data, solve it in future
             normal_path='sne/validation',
             seg_map_path='gt_image_2/validation'),
-        pipeline=test_pipeline))
+        pipeline=val_pipeline))
 test_dataloader = dict(
     batch_size=1,
     num_workers=16,

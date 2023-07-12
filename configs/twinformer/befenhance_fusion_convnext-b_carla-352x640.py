@@ -39,7 +39,7 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.TwinFuseEnhancePixelDecoder',
+            type='mmdet.TwinFuseBeforeEnhancePixelDecoder',
             img_scale=crop_size, # need to modify if image resolution differs
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
@@ -180,7 +180,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'),
 )
 vis_backends = [dict(type='LocalVisBackend'),
-                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer", name="befenhance_convnext-b_carla")),
+                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_carla-352x640", name="befenhance_fusion_convnext-b")),
 ]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')

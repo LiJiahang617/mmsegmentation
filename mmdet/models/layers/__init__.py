@@ -11,8 +11,10 @@ from .matrix_nms import mask_matrix_nms
 from .msdeformattn_pixel_decoder import MSDeformAttnPixelDecoder
 from .twindeformattn_pixel_decoder import TwinDeformAttnPixelDecoder
 from .twin_befenhance_pixel_decoder import TwinBEnhancedPixelDecoder
-from .fusion_enhance_pixel_decoder import TwinFuseEnhancePixelDecoder
+from .fusion_befenhance_pixel_decoder import TwinFuseBeforeEnhancePixelDecoder
+from .fusion_pixel_decoder import TwinFusePixelDecoder
 from .twin_aftenhance_pixel_decoder import TwinAEnhancedPixelDecoder
+from .fusion_aftenhance_pixel_decoder import TwinFuseAfterEnhancePixelDecoder
 from .twindeformattn_dcnv2_pixel_decoder import TwinDeformAttnDCNv2PixelDecoder, FeatureSelectionModule,FeatureAlign
 from .normed_predictor import NormedConv2d, NormedLinear
 from .pixel_decoder import PixelDecoder, TransformerEncoderPixelDecoder
@@ -65,5 +67,6 @@ __all__ = [
     'Mask2FormerTransformerDecoderLayer', 'Mask2FormerTransformerDecoder',
     'TwinDeformAttnPixelDecoder', 'TwinDeformAttnDCNv2PixelDecoder',
     'FeatureSelectionModule', 'TwinBEnhancedPixelDecoder',
-    'TwinAEnhancedPixelDecoder', 'TwinFuseEnhancePixelDecoder'
+    'TwinAEnhancedPixelDecoder', 'TwinFuseBeforeEnhancePixelDecoder',
+    'TwinFuseAfterEnhancePixelDecoder', 'TwinFusePixelDecoder'
 ]

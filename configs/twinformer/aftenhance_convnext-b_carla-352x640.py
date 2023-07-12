@@ -179,7 +179,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'),
 )
 vis_backends = [dict(type='LocalVisBackend'),
-                dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer", name="aftenhance_convnext-b_carla")),
+                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_carla-352x640", name="aftenhance_convnext-b")),
 ]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')
