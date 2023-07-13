@@ -42,6 +42,7 @@ train_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
+        metainfo=dict(classes=('road')),
         reduce_zero_label=False,
         # have to modify next 2 properties at the same time
         modality='normal',
@@ -60,6 +61,7 @@ val_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
+        metainfo=dict(classes=('road')),
         reduce_zero_label=False,
         # have to modify next 2 properties at the same time
         modality='normal',
@@ -78,6 +80,7 @@ test_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
+        metainfo=dict(classes=('road')),
         reduce_zero_label=False,
         # have to modify next 2 properties at the same time
         modality='normal',

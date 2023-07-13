@@ -115,7 +115,7 @@ class BaseSegDataset(BaseDataset):
         self.data_list: List[dict] = []
         self.data_bytes: np.ndarray
 
-        # Set meta information.
+        # Set meta information, label mapping is done here.
         self._metainfo = self._load_metainfo(copy.deepcopy(metainfo))
 
         # Get label map for custom classes

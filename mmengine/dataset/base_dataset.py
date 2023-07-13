@@ -492,6 +492,9 @@ class BaseDataset(Dataset):
                 f'metainfo should be a dict, but got {type(metainfo)}')
 
         for k, v in metainfo.items():
+            # for one-class-only back-up
+            if k == 'classes' and type(v) == str:
+                v = (v,)
             if isinstance(v, str):
                 # If type of value is string, and can be loaded from
                 # corresponding backend. it means the file name of meta file.
