@@ -683,7 +683,6 @@ class LoadCityscapesImageFromFile(BaseTransform):
                  to_float32: bool = True,
                  color_type: str = 'color',
                  imdecode_backend: str = 'cv2',
-                 anodecode_backend: str = 'cv2',
                  file_client_args: Optional[dict] = None,
                  ignore_empty: bool = False,
                  *,
@@ -693,7 +692,6 @@ class LoadCityscapesImageFromFile(BaseTransform):
         self.to_float32 = to_float32
         self.color_type = color_type
         self.imdecode_backend = imdecode_backend
-        self.anodecode_backend = anodecode_backend
         # add param named modality
         self.modality = modality
 
@@ -743,7 +741,7 @@ class LoadCityscapesImageFromFile(BaseTransform):
             elif len(img.shape) > 3:
                 raise ValueError('RGB image has more than 3 dims, but it should not')
             ano = mmcv.customfrombytes(
-                ano_bytes, flag='unchanged', backend=self.anodecode_backend).astype(np.float32)
+                ano_bytes, flag='unchanged', backend=self.imdecode_backend).astype(np.float32)
             if len(ano.shape) < 3 and self.modality != 'normal':
                 ano = np.expand_dims(ano, -1)
             # in case normal img do not have three dims
@@ -763,7 +761,7 @@ class LoadCityscapesImageFromFile(BaseTransform):
 
         results['img'] = img / 255
         if self.modality == 'normal':  # in Cityscapes dataset, normal img is uint8, multiplied by 255, so must divided
-            results['ano'] = ano.astype(np.float32) / 255
+            results['ano'] = ano / 255
         # in Cityscapes dataset, all disp samples are tiff files, in which are raw disp
         elif self.modality == 'disp' or self.modality == 'tdisp':
             disp_real = ano.astype(np.float32)

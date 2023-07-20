@@ -1,35 +1,33 @@
 # dataset settings
-dataset_type = 'MMCityscapesDataset'
-data_root = '/media/ljh/data/cityscapes'
+dataset_type = 'MMCityroadDataset'
+data_root = '/media/ljh/data/Cityscapes'
 sample_scale = (1024, 512)
 
 train_pipeline = [
-    # modality value must be modified, if you choose disp as another modality, you will need to
-    # change ano backend to ``tifffile``
-    dict(type='LoadCityscapesImageFromFile', to_float32=True, modality='normal', anodecode_backend='cv2'),
+    # modality value must be modified
+    dict(type='LoadCityscapesImageFromFile', to_float32=True, modality='normal'),
     dict(type='StackByChannel', keys=('img', 'ano')),
-    dict(type='LoadAnnotations', reduce_zero_label=False),
+    dict(type='LoadCityroadAnnotations', reduce_zero_label=False),
     dict(
         type='Resize',
         scale=sample_scale),  # Note: w, h instead of h, w
     dict(type='PackSegInputs')
 ]
 val_pipeline = [
-    # modality value must be modified, if you choose disp as another modality, you will need to
-    # change ano backend to ``tifffile``
-    dict(type='LoadCityscapesImageFromFile', to_float32=True, modality='normal', anodecode_backend='cv2'),
+    # modality value must be modified
+    dict(type='LoadCityscapesImageFromFile', to_float32=True, modality='normal'),
     dict(type='StackByChannel', keys=('img', 'ano')),
     dict(
         type='Resize',
         scale=sample_scale),  # Note: w, h instead of h, w
     # add loading annotation after ``Resize`` because ground truth
     # does not need to do resize data transform
-    dict(type='LoadAnnotations', reduce_zero_label=False),
+    dict(type='LoadCityroadAnnotations', reduce_zero_label=False),
     dict(type='PackSegInputs')
 ]
 test_pipeline = [
     # modality value must be modified
-    dict(type='LoadCityscapesImageFromFile', to_float32=True, modality='normal', anodecode_backend='cv2'),
+    dict(type='LoadCityscapesImageFromFile', to_float32=True, modality='normal'),
     dict(type='StackByChannel', keys=('img', 'ano')),
     dict(type='Resize', scale=sample_scale),
     dict(type='PackSegInputs')
@@ -42,16 +40,15 @@ train_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        metainfo=dict(classes=('road')),
         reduce_zero_label=False,
         # have to modify next 2 properties at the same time
         modality='normal',
-        ano_suffix='_normal.jpg',
+        ano_suffix='_normal.png',
         data_prefix=dict(
-            img_path='leftImg8bit/train',
-            disp_path='left_disp/train',
-            normal_path='left_normal/train',
-            seg_map_path='gtFine/train'),
+            img_path='images/train',
+            disp_path='disp/train',
+            normal_path='sne/train',
+            seg_map_path='annotations/train'),
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -61,16 +58,15 @@ val_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        metainfo=dict(classes=('road')),
         reduce_zero_label=False,
         # have to modify next 2 properties at the same time
         modality='normal',
-        ano_suffix='_normal.jpg',
+        ano_suffix='_normal.png',
         data_prefix=dict(
-            img_path='leftImg8bit/val',
-            disp_path='left_disp/val',
-            normal_path='left_normal/val',
-            seg_map_path='gtFine/val'),
+            img_path='images/val',
+            disp_path='disp/val',
+            normal_path='sne/val',
+            seg_map_path='annotations/val'),
         pipeline=val_pipeline))
 test_dataloader = dict(
     batch_size=1,
@@ -80,16 +76,15 @@ test_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        metainfo=dict(classes=('road')),
         reduce_zero_label=False,
         # have to modify next 2 properties at the same time
         modality='normal',
-        ano_suffix='_normal.jpg',
+        ano_suffix='_normal.png',
         data_prefix=dict(
-            img_path='leftImg8bit/test',
-            disp_path='left_disp/test',
-            normal_path='left_normal/test',
-            seg_map_path='gtFine/test'),
+            img_path='images/test',
+            disp_path='disp/test',
+            normal_path='sne/test',
+            seg_map_path='annotations/test'),
         pipeline=test_pipeline))
 
 val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU', 'mFscore'])

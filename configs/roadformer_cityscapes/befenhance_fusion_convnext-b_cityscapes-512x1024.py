@@ -2,7 +2,7 @@ _base_ = [
 '../_base_/datasets/mmcityscapes_1024x512.py'
 ]
 
-pretrained ='https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-large_3rdparty_in21k_20220301-e6e0ea0a.pth'
+pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_in21k_20220301-262fd037.pth'
 
 crop_size = (512, 1024) # h, w
 data_preprocessor = dict(
@@ -13,14 +13,14 @@ data_preprocessor = dict(
     pad_val=0,
     seg_pad_val=255,
     size=crop_size)
-num_classes = 19
+num_classes = 20
 
 model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,
     backbone=dict(
         type='mmpretrain.TwinConvNeXt',
-        arch='large',
+        arch='base',
         out_indices=[0, 1, 2, 3],
         drop_path_rate=0.4,
         layer_scale_init_value=1.0,
@@ -30,7 +30,7 @@ model = dict(
             prefix='backbone.')),
     decode_head=dict(
         type='TwinFormerHead',
-        in_channels=[384, 768, 1536, 3072],  # modified here
+        in_channels=[256, 512, 1024, 2048],  # modified here
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,
@@ -39,7 +39,7 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.TwinFuseAfterEnhancePixelDecoder',
+            type='mmdet.TwinFuseBeforeEnhancePixelDecoder',
             img_scale=crop_size, # need to modify if image resolution differs
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
@@ -153,13 +153,13 @@ param_scheduler = [
         eta_min=0,
         power=0.9,
         begin=0,
-        end=150,
+        end=50,
         by_epoch=True)
 ]
 
 # training schedule for 160k
 train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=150, val_begin=1, val_interval=1)
+    type='EpochBasedTrainLoop', max_epochs=50, val_begin=1, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 default_hooks = dict(
@@ -167,10 +167,10 @@ default_hooks = dict(
     logger=dict(type='LoggerHook', interval=50, log_metric_by_epoch=True),
     param_scheduler=dict(type='ParamSchedulerHook'),
     checkpoint=dict(
-        type='CheckpointHook', by_epoch=True, interval=10,
+        type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHook', interval=1, draw=True))
+    visualization=dict(type='SegVisualizationHook', interval=1, draw=False))
 
 # Runtime configs
 default_scope = 'mmseg'
@@ -180,7 +180,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'),
 )
 vis_backends = [dict(type='LocalVisBackend'),
-                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_cityscapes-512x1024", name="aftenhance_fusion_convnext-l")),
+                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_cityscapes-512x1024", name="befenhance_fusion_convnext-b")),
 ]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')

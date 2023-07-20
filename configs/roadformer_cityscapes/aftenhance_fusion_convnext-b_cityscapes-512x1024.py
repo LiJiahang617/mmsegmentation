@@ -13,7 +13,7 @@ data_preprocessor = dict(
     pad_val=0,
     seg_pad_val=255,
     size=crop_size)
-num_classes = 19
+num_classes = 20
 
 model = dict(
     type='EncoderDecoder',
@@ -39,7 +39,7 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.TwinFuseBeforeEnhancePixelDecoder',
+            type='mmdet.TwinFuseAfterEnhancePixelDecoder',
             img_scale=crop_size, # need to modify if image resolution differs
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
@@ -170,7 +170,7 @@ default_hooks = dict(
         type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHook', interval=1, draw=True))
+    visualization=dict(type='SegVisualizationHook', interval=1, draw=False))
 
 # Runtime configs
 default_scope = 'mmseg'
@@ -180,7 +180,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'),
 )
 vis_backends = [dict(type='LocalVisBackend'),
-                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_cityscapes-512x1024", name="befenhance_fusion_convnext-b")),
+                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_cityscapes-512x1024", name="aftenhance_fusion_convnext-b")),
 ]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')

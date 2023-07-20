@@ -13,7 +13,7 @@ data_preprocessor = dict(
     pad_val=0,
     seg_pad_val=255,
     size=crop_size)
-num_classes = 19
+num_classes = 20
 
 model = dict(
     type='EncoderDecoder',
@@ -170,7 +170,7 @@ default_hooks = dict(
         type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHook', interval=1, draw=True))
+    visualization=dict(type='SegVisualizationHook', interval=1, draw=False))
 
 # Runtime configs
 default_scope = 'mmseg'

@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .formatting import (PackSegInputs, PackMultimodalSegInputs)
-from .loading import (LoadAnnotations, LoadBiomedicalAnnotation,LoadCarlaAnnotations,
-                      LoadKittiAnnotations, LoadOrfdAnnotations,
+from .loading import (LoadAnnotations, LoadBiomedicalAnnotation, LoadCarlaAnnotations,
+                      LoadKittiAnnotations, LoadOrfdAnnotations, LoadCityroadAnnotations,
                       LoadBiomedicalData, LoadBiomedicalImageFromFile,
-                      LoadImageFromNDArray)
+                      LoadImageFromNDArray, LoadCityscapesAnnotations)
 # yapf: disable
 from .transforms import (CLAHE, AdjustGamma, BioMedical3DPad,
                          BioMedical3DRandomCrop, BioMedical3DRandomFlip,
@@ -20,8 +20,8 @@ __all__ = [
     'PhotoMetricDistortion', 'RandomRotate', 'AdjustGamma', 'CLAHE', 'Rerange',
     'RGB2Gray', 'RandomCutOut', 'RandomMosaic', 'PackSegInputs', 'PackMultimodalSegInputs',
     'ResizeToMultiple', 'LoadImageFromNDArray', 'LoadBiomedicalImageFromFile',
-    'LoadBiomedicalAnnotation', 'LoadBiomedicalData', 'GenerateEdge',
+    'LoadBiomedicalAnnotation', 'LoadBiomedicalData', 'GenerateEdge', 'LoadCityroadAnnotations',
     'ResizeShortestEdge', 'BioMedicalGaussianNoise', 'BioMedicalGaussianBlur',
     'BioMedical3DRandomFlip', 'BioMedicalRandomGamma', 'BioMedical3DPad',
-    'RandomRotFlip', 'LoadKittiAnnotations', 'LoadOrfdAnnotations'
+    'RandomRotFlip', 'LoadKittiAnnotations', 'LoadOrfdAnnotations', 'LoadCityscapesAnnotations'
 ]

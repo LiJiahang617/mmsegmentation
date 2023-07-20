@@ -26,6 +26,7 @@ from .mmcarla import MMCarlaDataset
 from .mmkitti import MMKittiDataset
 from . mmorfd import MMOrfdDataset
 from .mmcityscapes import MMCityscapesDataset
+from .mmcityroad import MMCityroadDataset
 # yapf: disable
 from .transforms import (CLAHE, AdjustGamma, BioMedical3DPad,
                          BioMedical3DRandomCrop, BioMedical3DRandomFlip,
@@ -53,7 +54,7 @@ __all__ = [
     'LoadImageFromNDArray', 'LoadBiomedicalImageFromFile',
     'LoadBiomedicalAnnotation', 'LoadBiomedicalData', 'GenerateEdge',
     'DecathlonDataset', 'LIPDataset', 'ResizeShortestEdge',
-    'BioMedicalGaussianNoise', 'BioMedicalGaussianBlur',
+    'BioMedicalGaussianNoise', 'BioMedicalGaussianBlur', 'MMCityroadDataset',
     'BioMedicalRandomGamma', 'BioMedical3DPad', 'RandomRotFlip',
     'SynapseDataset', 'REFUGEDataset', 'MapillaryDataset_v1',
     'MapillaryDataset_v2', 'CarlaDataset', 'MMCarlaDataset',

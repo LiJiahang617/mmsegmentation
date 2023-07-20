@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'MMCarlaDataset'
-data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_test'
+data_root = '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_v3'
 train_pipeline = [
     dict(type='LoadMultimodalImageFromFile', to_float32=True, modality='normal'),  # modality value must be modified
     dict(type='StackByChannel', keys=('img', 'ano')),
