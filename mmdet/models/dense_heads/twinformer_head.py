@@ -369,7 +369,7 @@ class TwinFormerHead(MaskFormerHead):
             mode='bilinear',
             align_corners=False)
         # shape (batch_size, num_queries, h, w) ->
-        #   (batch_size * num_head, num_queries, h, w)
+        #   (batch_size * num_head, num_queries, h * w)
         attn_mask = attn_mask.flatten(2).unsqueeze(1).repeat(
             (1, self.num_heads, 1, 1)).flatten(0, 1)
         attn_mask = attn_mask.sigmoid() < 0.5
@@ -444,6 +444,7 @@ class TwinFormerHead(MaskFormerHead):
         for i in range(self.num_transformer_decoder_layers): # 9
             level_idx = i % self.num_transformer_feat_level
             # if a mask is all True(all background), then set it all False.
+            # (batch_size * num_head, num_queries, h * w)
             attn_mask[torch.where(
                 attn_mask.sum(-1) == attn_mask.shape[-1])] = False
 

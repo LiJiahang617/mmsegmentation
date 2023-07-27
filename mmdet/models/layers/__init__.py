@@ -16,6 +16,7 @@ from .fusion_pixel_decoder import TwinFusePixelDecoder
 from .twin_aftenhance_pixel_decoder import TwinAEnhancedPixelDecoder
 from .fusion_aftenhance_pixel_decoder import TwinFuseAfterEnhancePixelDecoder
 from .twindeformattn_dcnv2_pixel_decoder import TwinDeformAttnDCNv2PixelDecoder, FeatureSelectionModule,FeatureAlign
+from .selayer_pixel_decoder import TwinSElayerPixelDecoder
 from .normed_predictor import NormedConv2d, NormedLinear
 from .pixel_decoder import PixelDecoder, TransformerEncoderPixelDecoder
 from .positional_encoding import (LearnedPositionalEncoding,
@@ -68,5 +69,6 @@ __all__ = [
     'TwinDeformAttnPixelDecoder', 'TwinDeformAttnDCNv2PixelDecoder',
     'FeatureSelectionModule', 'TwinBEnhancedPixelDecoder',
     'TwinAEnhancedPixelDecoder', 'TwinFuseBeforeEnhancePixelDecoder',
-    'TwinFuseAfterEnhancePixelDecoder', 'TwinFusePixelDecoder'
+    'TwinFuseAfterEnhancePixelDecoder', 'TwinFusePixelDecoder',
+    'TwinSElayerPixelDecoder'
 ]
