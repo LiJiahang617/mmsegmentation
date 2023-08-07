@@ -169,7 +169,7 @@ default_hooks = dict(
         type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHook', draw=True))
+    visualization=dict(type='SegVisualizationHook', draw=False))
 
 # Default setting for scaling LR automatically
 #   - `enable` means enable scaling LR automatically

@@ -15,7 +15,7 @@ data_preprocessor = dict(
 model = dict(
     data_preprocessor=data_preprocessor,
     backbone=dict(
-        init_cfg=dict(type='Pretrained', checkpoint='../pretrain/segformer_mit-b0_512x512_160k_ade20k_20210726_101530-8ffa8fda.pth', prefix='backbone.'))
+        init_cfg=dict(type='Pretrained', checkpoint='/home/ljh/Desktop/Workspace/mmsegmentation/pretrain/segformer_mit-b0_512x512_160k_ade20k_20210726_101530-8ffa8fda.pth'))
 )
 
 optim_wrapper = dict(

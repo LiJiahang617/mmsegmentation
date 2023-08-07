@@ -81,16 +81,16 @@ test_dataloader = dict(
         modality='normal',
         ano_suffix='_normal.png',
         data_prefix=dict(
-            img_path='images/test',
-            disp_path='disp/test',
-            normal_path='sne/test',
-            seg_map_path='annotations/test'),
-        pipeline=test_pipeline))
+            img_path='images/val',
+            disp_path='disp/val',
+            normal_path='sne/val',
+            seg_map_path='annotations/val'),
+        pipeline=val_pipeline))
 
-val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU', 'mFscore'])
-test_evaluator = dict(
-    type='IoUMetric',
-    iou_metrics=['mIoU', 'mFscore'],
-    format_only=True,
-    output_dir='work_dirs/format_results')
-
+val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU', 'mFscore'], ignore_index=0)
+# test_evaluator = dict(
+#     type='IoUMetric',
+#     iou_metrics=['mIoU', 'mFscore'],
+#     format_only=True,
+#     output_dir='work_dirs/format_results')
+test_evaluator = val_evaluator
