@@ -11,11 +11,11 @@ class CityscapesDataset(BaseSegDataset):
     fixed to '_gtFine_labelTrainIds.png' for Cityscapes dataset.
     """
     METAINFO = dict(
-        classes=('road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
+        classes=('ignore', 'road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
                  'traffic light', 'traffic sign', 'vegetation', 'terrain',
                  'sky', 'person', 'rider', 'car', 'truck', 'bus', 'train',
                  'motorcycle', 'bicycle'),
-        palette=[[128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156],
+        palette=[[0, 0, 0], [128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156],
                  [190, 153, 153], [153, 153, 153], [250, 170,
                                                     30], [220, 220, 0],
                  [107, 142, 35], [152, 251, 152], [70, 130, 180],
@@ -24,7 +24,7 @@ class CityscapesDataset(BaseSegDataset):
 
     def __init__(self,
                  img_suffix='_leftImg8bit.png',
-                 seg_map_suffix='_gtFine_labelTrainIds.png',
+                 seg_map_suffix='_gtFine_color.png',
                  **kwargs) -> None:
         super().__init__(
             img_suffix=img_suffix, seg_map_suffix=seg_map_suffix, **kwargs)
