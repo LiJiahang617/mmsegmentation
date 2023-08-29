@@ -155,7 +155,7 @@ class SegLocalVisualizer(Visualizer):
             name: str,
             image: np.ndarray,
             data_sample: Optional[SegDataSample] = None,
-            draw_gt: bool = False,
+            draw_gt: bool = True,
             draw_pred: bool = True,
             show: bool = False,
             wait_time: float = 0,

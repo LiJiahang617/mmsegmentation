@@ -9,28 +9,22 @@ from mmengine.structures import PixelData
 from mmseg.structures import SegDataSample
 from mmseg.visualization import SegLocalVisualizer
 
-
+# choose type of dataset for demo
+dataset_type = 'carla'
 # need to modify here
-out_file = 'out_file_cityscapes'
-save_dir = '../../test1'
-dataset_type = 'cityscapes'
+save_dir = '/home/ljh/Desktop/Workspace/mmsegmentation/gt_demo'
 # need to modify here
 image = mmcv.imread(
-    osp.join(
-        osp.dirname(__file__),
-        '../../test1/aachen_000000_000019_leftImg8bit.png'
-    ),
-    'color')
+    '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_v3/images/testing/9_798018147.png',
+    'color', channel_order='rgb')
 # need to modify here
 sem_seg = mmcv.imread(
-    osp.join(
-        osp.dirname(__file__),
-        '../../test1/aachen_000000_000019_gtFine_labelTrainIds.png'  # noqa
-    ),
+    '/home/ljh/Desktop/Workspace/mmsegmentation/data/carla_v3/annotations/testing/9_798018147.png',
     'unchanged')
 seg_local_visualizer = SegLocalVisualizer(
         vis_backends=[dict(type='LocalVisBackend')],
-        save_dir=save_dir)
+        save_dir=save_dir,
+        alpha=0.8)
 
 if dataset_type == 'cityscapes':
     sem_seg = torch.from_numpy(sem_seg)
@@ -54,20 +48,20 @@ if dataset_type == 'cityscapes':
                  [119, 11, 32]])
     # 当`show=True`时，直接显示结果，
     # 当 `show=False`时，结果将保存在本地文件夹中。
-
-    seg_local_visualizer.add_datasample(out_file, image,
-                                        data_sample, show=False)
+    name = 'cityscapes'
+    seg_local_visualizer.add_datasample(name, image,
+                                        data_sample, draw_gt=True, draw_pred=False, show=False)
 
 # carla does not contain direct labels, only has
 # rgb_visual_annotations, so transform it to true label
 elif dataset_type in ['kitti', 'carla']:
     if dataset_type == 'carla':
-        label = np.zeros_like(sem_seg[:,:,0])
+        label = np.zeros_like(sem_seg[:, :, 0])
         label[sem_seg[:,:,2]==128] = 1
         label[sem_seg[:,:,1]==255] = 2
     elif dataset_type == 'kitti':
         label = np.zeros_like(sem_seg[:, :, 0])
-        label[(sem_seg[:, :, 0] == 255) & (sem_seg[:, :, 2] == 255)] = 1
+        label[(sem_seg[:, :, 0] == 255) & (sem_seg[:, :, 2] == 255)] = 0
 
     label = torch.from_numpy(label)
     gt_sem_seg_data = dict(data=label)
@@ -76,10 +70,10 @@ elif dataset_type in ['kitti', 'carla']:
     data_sample.gt_sem_seg = gt_sem_seg
 
     seg_local_visualizer.dataset_meta = dict(
-        classes=('background', 'road', 'pothole'),
-        palette=[[0, 0, 0],[128, 64, 128], [0, 255, 0]])
+        classes=('ignore', 'road', 'pothole'),
+        palette=[[0, 0, 0], [128, 64, 128], [0, 255, 0]])
     # 当`show=True`时，直接显示结果，
     # 当 `show=False`时，结果将保存在本地文件夹中。
-
-    seg_local_visualizer.add_datasample(out_file, image,
-                                        data_sample, show=False)
+    name = 'kitti_carla'
+    seg_local_visualizer.add_datasample(name, image,
+                                        data_sample, draw_gt=True, draw_pred=False, show=False)

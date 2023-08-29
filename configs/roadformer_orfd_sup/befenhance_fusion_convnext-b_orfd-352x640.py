@@ -2,7 +2,7 @@ _base_ = [
     '../_base_/datasets/mmorfd_640x352.py'
 ]
 
-pretrained = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/swin/swin_base_patch4_window12_384_20220317-55b0104a.pth'  # noqa
+pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_in21k_20220301-262fd037.pth'
 
 crop_size = (352, 640) # h, w
 data_preprocessor = dict(
@@ -15,7 +15,6 @@ data_preprocessor = dict(
     size=crop_size)
 num_classes = 2
 
-depths = [2, 2, 18, 2]
 model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,
@@ -40,7 +39,8 @@ model = dict(
         num_transformer_feat_level=3,
         align_corners=False,
         pixel_decoder=dict(
-            type='mmdet.TwinDeformAttnPixelDecoder',
+            type='mmdet.TwinFuseAfterEnhancePixelDecoder',
+            img_scale=crop_size, # need to modify if image resolution differs
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
             act_cfg=dict(type='ReLU'),
@@ -138,64 +138,55 @@ model = dict(
     train_cfg=dict(),
     test_cfg=dict(mode='whole'))
 
-# set all layers in backbone to lr_mult=0.1
-# set all norm layers, position_embeding,
-# query_embeding, level_embeding to decay_multi=0.0
-backbone_norm_multi = dict(lr_mult=0.1, decay_mult=0.0)
-backbone_embed_multi = dict(lr_mult=0.1, decay_mult=0.0)
-embed_multi = dict(lr_mult=1.0, decay_mult=0.0)
-custom_keys = {
-    'backbone': dict(lr_mult=0.1, decay_mult=1.0),
-    'backbone.patch_embed_x.norm': backbone_norm_multi,
-    'backbone.patch_embed_y.norm': backbone_norm_multi,
-    'backbone.norm': backbone_norm_multi,
-    'absolute_pos_embed': backbone_embed_multi,
-    'relative_position_bias_table': backbone_embed_multi,
-    'query_embed': embed_multi,
-    'query_feat': embed_multi,
-    'level_embed': embed_multi
-}
-# for RGB encoder
-custom_keys.update({
-    f'backbone.stages_x.{stage_id}.blocks.{block_id}.norm': backbone_norm_multi
-    for stage_id, num_blocks in enumerate(depths)
-    for block_id in range(num_blocks)
-})
-# for another encoder
-custom_keys.update({
-    f'backbone.stages_y.{stage_id}.blocks.{block_id}.norm': backbone_norm_multi
-    for stage_id, num_blocks in enumerate(depths)
-    for block_id in range(num_blocks)
-})
-# for RGB encoder
-custom_keys.update({
-    f'backbone.stages_x.{stage_id}.downsample.norm': backbone_norm_multi
-    for stage_id in range(len(depths) - 1)
-})
-# for another encoder
-custom_keys.update({
-    f'backbone.stages_y.{stage_id}.downsample.norm': backbone_norm_multi
-    for stage_id in range(len(depths) - 1)
-})
 # optimizer
-optimizer = dict(
-    type='AdamW', lr=0.0001, weight_decay=0.05, eps=1e-8, betas=(0.9, 0.999))
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005)
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=optimizer,
     clip_grad=dict(max_norm=0.01, norm_type=2),
-    paramwise_cfg=dict(custom_keys=custom_keys, norm_decay_mult=0.0))
+    paramwise_cfg=dict(
+        custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0)),
+        norm_decay_mult=0.0))
 
 # learning policy
 param_scheduler = [
     dict(
         type='PolyLR',
-        eta_min=0,
+        eta_min=1e-4,
         power=0.9,
         begin=0,
-        end=160000,
+        end=50,
         by_epoch=True)
 ]
+
+# optimizer = dict(
+#     type='AdamW', lr=0.0003, weight_decay=0.05, eps=1e-8, betas=(0.9, 0.999))
+# optim_wrapper = dict(
+#     type='OptimWrapper',
+#     optimizer=optimizer,
+#     paramwise_cfg=dict(
+#         custom_keys={
+#             'backbone': dict(lr_mult=0.1, decay_mult=1.0),
+#         },
+#         norm_decay_mult=0.0),
+#     clip_grad=dict(max_norm=0.01, norm_type=2))
+
+# # learning policy
+# param_scheduler = [
+#     # dict(
+#     #     type='LinearLR',
+#     #     start_factor=0.001,
+#     #     by_epoch=False,
+#     #     begin=0,
+#     #     end=500),
+#     dict(
+#         type='PolyLR',
+#         eta_min=0.00001,
+#         power=0.9,
+#         begin=0,
+#         end=500,
+#         by_epoch=True)
+# ]
 
 # training schedule for 160k
 train_cfg = dict(
@@ -207,10 +198,10 @@ default_hooks = dict(
     logger=dict(type='LoggerHook', interval=50, log_metric_by_epoch=True),
     param_scheduler=dict(type='ParamSchedulerHook'),
     checkpoint=dict(
-        type='CheckpointHook', by_epoch=True, interval=5,
+        type='CheckpointHook', by_epoch=True, interval=25,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHookplus', draw=True))
+    visualization=dict(type='SegVisualizationHookplus', draw=False))
 
 # Runtime configs
 default_scope = 'mmseg'
@@ -220,7 +211,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'),
 )
 vis_backends = [dict(type='LocalVisBackend'),
-                dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer", name="aftenhance_convnext-b_carla")),
+                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer", name="aftenhance_convnext-b_carla")),
 ]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')

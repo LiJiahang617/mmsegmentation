@@ -109,23 +109,20 @@ def inference_multimodel(img: ImageType, ano: ImageType,
 
     return results if is_batch else results[0]
 
+# alpha is suitible to set as 0.8
 def visualize(args, model, recorder, result, source):
     seg_visualizer = SegLocalVisualizer(
         vis_backends=[dict(type='LocalVisBackend')],
-        save_dir='temp_dir',
-        alpha=0.5)
+        save_dir='predict_demo',
+        alpha=0.8)
     seg_visualizer.dataset_meta = dict(
         classes=model.dataset_meta['classes'],
         palette=model.dataset_meta['palette'])
+    image = mmcv.imread(args.img, 'color', channel_order='rgb')
 
-    image = mmcv.imread(args.img, 'color')
-
-    # prepare data
-    # data, is_batch = _preprare_mulitmodal_data(args.img, args.ano, model)
-    # seg_visualizer.add_graph(model, data)
-
+    # add predict result to visualizer
     seg_visualizer.add_datasample(
-        name='predict',
+        name='carla',
         image=image,
         data_sample=result,
         draw_gt=False,
@@ -134,15 +131,24 @@ def visualize(args, model, recorder, result, source):
         out_file=None,
         show=False)
 
-    # add feature map to wandb visualizer
+    # add feature map to visualizer
     module_list = list(source.keys())
     for i in range(len(recorder.data_buffer)):
         module = module_list[i]
         feature = recorder.data_buffer[i][0]  # remove the batch
         drawn_img = seg_visualizer.draw_featmap(
             feature, image, channel_reduction=None, topk=8, arrangement=(4, 2))
-        seg_visualizer.show(drawn_img)
-        # seg_visualizer.add_image(f'{module}', drawn_img)
+        # seg_visualizer.show(drawn_img)
+        """
+        default to save image using:
+        Visualizer.add_image --> Localvisbackend.add_image, actually using cv2.imwrite()
+        self.save_dir + self._img_save_dir + save_file_name
+        save_dir is defined in init Localvisualizer, which could be inherited by its backends as default.
+        _img_save_dir is defined by visbackend default
+        users should modify the save_file_name
+        """
+
+        seg_visualizer.add_image(f'{module}', drawn_img)
 
     if args.gt_mask:
         sem_seg = mmcv.imread(args.gt_mask, 'unchanged')

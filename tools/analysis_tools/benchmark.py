@@ -77,11 +77,11 @@ def main():
         # the first several iterations may be very slow so skip them
         num_warmup = 5
         pure_inf_time = 0
-        total_iters = 200
+        total_iters = 100
 
         # benchmark with 200 batches and take the average
         for i, data in enumerate(data_loader):
-            data = model.data_preprocessor(data, True)
+            data = model.data_preprocessor(data, False)
             inputs = data['inputs']
             data_samples = data['data_samples']
             if torch.cuda.is_available():

@@ -181,7 +181,7 @@ default_hooks = dict(
         type='CheckpointHook', by_epoch=True, interval=150,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHookplus', interval=1, draw=False))
+    visualization=dict(type='SegVisualizationHookplus', interval=1, draw=True))
 
 # Runtime configs
 default_scope = 'mmseg'
@@ -191,7 +191,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'),
 )
 vis_backends = [dict(type='LocalVisBackend'),
-                dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_kitti-384x1280_aug", name="befenhance_fusion_convnext-l_0810")),
+                # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_kitti-384x1280_aug", name="befenhance_fusion_convnext-l_0810")),
 ]
 visualizer = dict(
     type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')
