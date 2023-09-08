@@ -1,30 +1,31 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
-from typing import List
 
 from mmseg.registry import DATASETS
 from .basesegdataset import BaseSegDataset
-
+from typing import List
 import mmengine
 import mmengine.fileio as fileio
 
 
 @DATASETS.register_module()
-class MMCarlaDataset(BaseSegDataset):
-    """Carla dataset.
+class MMKittirawDataset(BaseSegDataset):
+    """MMKittiraw dataset.
 
     """
     METAINFO = dict(
-        classes=('background', 'road', 'pothole'),
-        palette=[[0, 0, 0], [117, 189, 112], [231, 29, 54]]
+        classes=('background', 'road'),
+        palette=[[255, 0, 0], [117, 189, 112]]
     )
 
     def __init__(self,
-                 img_suffix='.png',
+                 img_suffix='.jpg',
+                 ano_suffix='.png',
                  seg_map_suffix='.png',
                  modality=None,
                  **kwargs) -> None:
         self.modality = modality
+        self.ano_suffix = ano_suffix
         print(f'use {modality} as another modality.')
         assert self.modality is not None, 'another modality is not setted ' \
                                           'correctly, please modify your config file!'
@@ -32,7 +33,7 @@ class MMCarlaDataset(BaseSegDataset):
             img_suffix=img_suffix, seg_map_suffix=seg_map_suffix, **kwargs)
 
     def load_data_list(self) -> List[dict]:
-        """Load multimodal-annotation from directory or annotation file.
+        """Load multimodal annotation file path from directory or annotation file.
 
         Returns:
             list[dict]: All data info of dataset.
@@ -76,8 +77,10 @@ class MMCarlaDataset(BaseSegDataset):
                 if ann_dir is not None:
                     seg_map = img.replace(self.img_suffix, self.seg_map_suffix)
                     data_info['seg_map_path'] = osp.join(ann_dir, seg_map)
-                # load another info
-                data_info['ano_path'] = osp.join(ano_dir, img)
+                # load another info, I did not write another modality
+                # dataloader in other case (if:), remember to do this in the future
+                ano = img.replace(self.img_suffix, self.ano_suffix)
+                data_info['ano_path'] = osp.join(ano_dir, ano)
                 data_info['label_map'] = self.label_map
                 data_info['reduce_zero_label'] = self.reduce_zero_label
                 data_info['seg_fields'] = []

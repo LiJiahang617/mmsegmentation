@@ -183,7 +183,7 @@ vis_backends = [dict(type='LocalVisBackend'),
                 # dict(type='WandbVisBackend', init_kwargs=dict(project="TwinFormer_kitti-384x1280_aug", name="befenhance_fusion_convnext-l")),
 ]
 visualizer = dict(
-    type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer')
+    type='SegLocalVisualizer', vis_backends=vis_backends, name='visualizer', alpha=0.6)
 log_processor = dict(window_size=10, by_epoch=True, custom_cfg=None, num_digits=4)
 log_level = 'INFO'
 load_from = None

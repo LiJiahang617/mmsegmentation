@@ -112,6 +112,8 @@ class SegLocalVisualizer(Visualizer):
 
         # draw semantic masks
         for label, color in zip(labels, colors):
+            if color == [255, 0, 0]:
+                continue
             self.draw_binary_masks(
                 sem_seg == label, colors=[color], alphas=self.alpha)
 
@@ -155,7 +157,7 @@ class SegLocalVisualizer(Visualizer):
             name: str,
             image: np.ndarray,
             data_sample: Optional[SegDataSample] = None,
-            draw_gt: bool = True,
+            draw_gt: bool = False,
             draw_pred: bool = True,
             show: bool = False,
             wait_time: float = 0,
@@ -216,7 +218,7 @@ class SegLocalVisualizer(Visualizer):
                                                classes, palette)
 
         if gt_img_data is not None and pred_img_data is not None:
-            drawn_img = np.concatenate((gt_img_data, pred_img_data), axis=1)
+            drawn_img = np.concatenate((gt_img_data, pred_img_data), axis=0)
         elif gt_img_data is not None:
             drawn_img = gt_img_data
         else:

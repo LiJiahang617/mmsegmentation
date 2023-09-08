@@ -1,5 +1,5 @@
 _base_ = [
-'../_base_/datasets/mmkitti_1280x384_aug.py'
+'../_base_/datasets/mmkittiraw_1280x384.py'
 ]
 
 pretrained ='https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-large_3rdparty_in21k_20220301-e6e0ea0a.pth'
