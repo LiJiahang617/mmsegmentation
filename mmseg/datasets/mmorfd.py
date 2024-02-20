@@ -15,7 +15,7 @@ class MMOrfdDataset(BaseSegDataset):
     """
     METAINFO = dict(
         classes=('background', 'freespace'),
-        palette=[[255, 0, 0], [255, 0, 255]]
+        palette=[[255, 0, 0], [117, 189, 112]]
     )
 
     def __init__(self,

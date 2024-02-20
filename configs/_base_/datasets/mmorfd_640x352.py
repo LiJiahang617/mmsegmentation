@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'MMOrfdDataset'
-data_root = '/home/ljh/Desktop/Workspace/Inter_Attention-Network/datasets/orfd'
+data_root = '/home/ljh/Desktop/Workspace/depth-to-normal-translator/ORFD_sequence'
 sample_scale = (640, 352)
 
 train_pipeline = [
@@ -33,10 +33,10 @@ train_dataloader = dict(
         img_suffix='.png',
         modality='normal',
         data_prefix=dict(
-            img_path='images/training',
-            depth_path='depth/training',
-            normal_path='normal/training',
-            seg_map_path='annotations/training'),
+            img_path='image_data',
+            depth_path='dense_depth',
+            normal_path='sne',
+            seg_map_path='gt_image'),
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -50,10 +50,10 @@ val_dataloader = dict(
         img_suffix='.png',
         modality='normal',
         data_prefix=dict(
-            img_path='images/validation',
-            depth_path='depth/validation',
-            normal_path='normal/validation',
-            seg_map_path='annotations/validation'),
+            img_path='image_data',
+            depth_path='dense_depth',
+            normal_path='sne',
+            seg_map_path='gt_image'),
         pipeline=test_pipeline))
 test_dataloader = dict(
     batch_size=1,
@@ -67,10 +67,10 @@ test_dataloader = dict(
         img_suffix='.png',
         modality='normal',
         data_prefix=dict(
-            img_path='images/testing',
-            depth_path='depth/testing',
-            normal_path='normal/testing',
-            seg_map_path='annotations/testing'),
+            img_path='image_data',
+            depth_path='dense_depth',
+            normal_path='sne',
+            seg_map_path='gt_image'),
         pipeline=test_pipeline))
 
 val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU', 'mFscore'])

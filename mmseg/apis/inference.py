@@ -97,7 +97,9 @@ def _preprare_data(imgs: ImageType, model: BaseSegmentor):
 
     cfg = model.cfg
     for t in cfg.test_pipeline:
-        if t.get('type') == 'LoadAnnotations':
+        if t.get('type') == 'LoadAnnotations' or t.get('type') == 'LoadCityscapesAnnotations' or t.get(
+                'type') == 'LoadCarlaAnnotations' \
+                or t.get('type') == 'LoadOrfdAnnotations':
             cfg.test_pipeline.remove(t)
 
     is_batch = True

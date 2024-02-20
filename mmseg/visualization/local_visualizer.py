@@ -119,6 +119,51 @@ class SegLocalVisualizer(Visualizer):
 
         return self.get_image()
 
+    def _custom_draw_sem_seg(self, image: np.ndarray, sem_seg: PixelData,
+                      classes: Optional[List],
+                      palette: Optional[List],
+                      target_category) -> np.ndarray:
+        """Customized draw semantic seg of GT or prediction.
+
+        Args:
+            image (np.ndarray): The image to draw.
+            sem_seg (:obj:`PixelData`): Data structure for pixel-level
+                annotations or predictions.
+            classes (list, optional): Input classes for result rendering, as
+                the prediction of segmentation model is a segment map with
+                label indices, `classes` is a list which includes items
+                responding to the label indices. If classes is not defined,
+                visualizer will take `cityscapes` classes by default.
+                Defaults to None.
+            palette (list, optional): Input palette for result rendering, which
+                is a list of color palette responding to the classes.
+                Defaults to None.
+            target_category: List or tuple of class categories number that you want
+                to draw.
+
+        Returns:
+            np.ndarray: the drawn image which channel is RGB.
+        """
+        num_classes = len(classes)
+
+        sem_seg = sem_seg.cpu().data
+        ids = np.unique(sem_seg)[::-1]
+        legal_indices = ids < num_classes
+        ids = ids[legal_indices]
+        labels = np.array(ids, dtype=np.int64)
+
+        colors = [palette[label] for label in labels]
+
+        self.set_image(image)
+
+        # draw semantic masks
+        for label, color in zip(labels, colors):
+            if label in target_category:
+                self.draw_binary_masks(
+                    sem_seg == label, colors=[color], alphas=self.alpha)
+
+        return self.get_image()
+
     def set_dataset_meta(self,
                          classes: Optional[List] = None,
                          palette: Optional[List] = None,
@@ -157,8 +202,8 @@ class SegLocalVisualizer(Visualizer):
             name: str,
             image: np.ndarray,
             data_sample: Optional[SegDataSample] = None,
-            draw_gt: bool = False,
-            draw_pred: bool = True,
+            draw_gt: bool = True,
+            draw_pred: bool = False,
             show: bool = False,
             wait_time: float = 0,
             # TODO: Supported in mmengine's Viusalizer.
@@ -219,6 +264,90 @@ class SegLocalVisualizer(Visualizer):
 
         if gt_img_data is not None and pred_img_data is not None:
             drawn_img = np.concatenate((gt_img_data, pred_img_data), axis=0)
+        elif gt_img_data is not None:
+            drawn_img = gt_img_data
+        else:
+            drawn_img = pred_img_data
+
+        if show:
+            self.show(drawn_img, win_name=name, wait_time=wait_time)
+
+        if out_file is not None:
+            mmcv.imwrite(mmcv.bgr2rgb(drawn_img), out_file)
+        else:
+            self.add_image(name, drawn_img, step)
+
+    @master_only
+    def custom_add_datasample(
+            self,
+            name: str,
+            image: np.ndarray,
+            data_sample: Optional[SegDataSample] = None,
+            draw_gt: bool = True,
+            draw_pred: bool = True,
+            show: bool = False,
+            wait_time: float = 0,
+            # TODO: Supported in mmengine's Viusalizer.
+            out_file: Optional[str] = None,
+            step: int = 0,
+            target_category = None) -> None:
+        """Customized draw datasample and save to all backends.
+
+        - If GT and prediction are plotted at the same time, they are
+        displayed in a stitched image where the left image is the
+        ground truth and the right image is the prediction.
+        - If ``show`` is True, all storage backends are ignored, and
+        the images will be displayed in a local window.
+        - If ``out_file`` is specified, the drawn image will be
+        saved to ``out_file``. it is usually used when the display
+        is not available.
+
+        Args:
+            name (str): The image identifier.
+            image (np.ndarray): The image to draw.
+            gt_sample (:obj:`SegDataSample`, optional): GT SegDataSample.
+                Defaults to None.
+            pred_sample (:obj:`SegDataSample`, optional): Prediction
+                SegDataSample. Defaults to None.
+            draw_gt (bool): Whether to draw GT SegDataSample. Default to True.
+            draw_pred (bool): Whether to draw Prediction SegDataSample.
+                Defaults to True.
+            show (bool): Whether to display the drawn image. Default to False.
+            wait_time (float): The interval of show (s). Defaults to 0.
+            out_file (str): Path to output file. Defaults to None.
+            step (int): Global step value to record. Defaults to 0.
+        """
+        classes = self.dataset_meta.get('classes', None)
+        palette = self.dataset_meta.get('palette', None)
+        # for orfd infer only
+        # palette = [[0, 0, 0], [128, 64, 128]]
+
+        gt_img_data = None
+        pred_img_data = None
+
+        if draw_gt and data_sample is not None and 'gt_sem_seg' in data_sample:
+            gt_img_data = image
+            assert classes is not None, 'class information is ' \
+                                        'not provided when ' \
+                                        'visualizing semantic ' \
+                                        'segmentation results.'
+            gt_img_data = self._custom_draw_sem_seg(gt_img_data,
+                                             data_sample.gt_sem_seg, classes,
+                                             palette, target_category)
+
+        if (draw_pred and data_sample is not None
+                and 'pred_sem_seg' in data_sample):
+            pred_img_data = image
+            assert classes is not None, 'class information is ' \
+                                        'not provided when ' \
+                                        'visualizing semantic ' \
+                                        'segmentation results.'
+            pred_img_data = self._custom_draw_sem_seg(pred_img_data,
+                                               data_sample.pred_sem_seg,
+                                               classes, palette, target_category)
+
+        if gt_img_data is not None and pred_img_data is not None:
+            drawn_img = np.concatenate((gt_img_data, pred_img_data), axis=1)
         elif gt_img_data is not None:
             drawn_img = gt_img_data
         else:

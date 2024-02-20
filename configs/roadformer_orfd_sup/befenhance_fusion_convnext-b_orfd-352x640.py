@@ -2,7 +2,7 @@ _base_ = [
     '../_base_/datasets/mmorfd_640x352.py'
 ]
 
-pretrained = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-base_3rdparty_in21k_20220301-262fd037.pth'
+pretrained = '/home/ljh/Desktop/Workspace/mmsegmentation/work_dirs/orfd_best_epoch.pth'
 
 crop_size = (352, 640) # h, w
 data_preprocessor = dict(
@@ -26,8 +26,7 @@ model = dict(
         layer_scale_init_value=1.0,
         gap_before_final_norm=False,
         init_cfg=dict(
-            type='Pretrained', checkpoint=pretrained,
-            prefix='backbone.')),
+            type='Pretrained', checkpoint=pretrained)),
     decode_head=dict(
         type='TwinFormerHead',
         in_channels=[256, 512, 1024, 2048], # modified here
@@ -139,23 +138,21 @@ model = dict(
     test_cfg=dict(mode='whole'))
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005)
+optimizer = dict(
+    type='AdamW', lr=0.0001, weight_decay=0.05, eps=1e-8, betas=(0.9, 0.999))
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=optimizer,
-    clip_grad=dict(max_norm=0.01, norm_type=2),
-    paramwise_cfg=dict(
-        custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0)),
-        norm_decay_mult=0.0))
+    clip_grad=dict(max_norm=5.0))
 
 # learning policy
 param_scheduler = [
     dict(
         type='PolyLR',
-        eta_min=1e-4,
+        eta_min=0,
         power=0.9,
         begin=0,
-        end=50,
+        end=150,
         by_epoch=True)
 ]
 
@@ -198,10 +195,10 @@ default_hooks = dict(
     logger=dict(type='LoggerHook', interval=50, log_metric_by_epoch=True),
     param_scheduler=dict(type='ParamSchedulerHook'),
     checkpoint=dict(
-        type='CheckpointHook', by_epoch=True, interval=25,
+        type='CheckpointHook', by_epoch=True, interval=5,
         save_best='mIoU'),
     sampler_seed=dict(type='DistSamplerSeedHook'),
-    visualization=dict(type='SegVisualizationHookplus', draw=False))
+    visualization=dict(type='SegVisualizationHook', interval=1, draw=True))
 
 # Runtime configs
 default_scope = 'mmseg'

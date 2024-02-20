@@ -2,12 +2,15 @@
 import argparse
 import tempfile
 from pathlib import Path
+from functools import partial
 
 import torch
+import numpy as np
 from mmengine import Config, DictAction
 from mmengine.logging import MMLogger
 from mmengine.model import revert_sync_batchnorm
 from mmengine.registry import init_default_scope
+from mmengine.runner import Runner
 
 from mmseg.models import BaseSegmentor
 from mmseg.registry import MODELS
@@ -25,11 +28,10 @@ def parse_args():
         description='Get the FLOPs of a segmentor')
     parser.add_argument('config', help='train config file path')
     parser.add_argument(
-        '--shape',
+        '--num-images',
         type=int,
-        nargs='+',
-        default=[2048, 1024],
-        help='input image size')
+        default=100,
+        help='num images of calculate model flops')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -51,48 +53,51 @@ def inference(args: argparse.Namespace, logger: MMLogger) -> dict:
         logger.error(f'Config file {config_name} does not exist')
 
     cfg: Config = Config.fromfile(config_name)
+    cfg.val_dataloader.batch_size = 1
     cfg.work_dir = tempfile.TemporaryDirectory().name
-    cfg.log_level = 'WARN'
+
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
     init_default_scope(cfg.get('scope', 'mmseg'))
 
-    if len(args.shape) == 1:
-        input_shape = (3, args.shape[0], args.shape[0])
-    elif len(args.shape) == 2:
-        input_shape = (3, ) + tuple(args.shape)
-    else:
-        raise ValueError('invalid input shape')
     result = {}
-
+    avg_flops = []
+    data_loader = Runner.build_dataloader(cfg.val_dataloader)
     model: BaseSegmentor = MODELS.build(cfg.model)
     if hasattr(model, 'auxiliary_head'):
         model.auxiliary_head = None
     if torch.cuda.is_available():
         model.cuda()
     model = revert_sync_batchnorm(model)
-    result['ori_shape'] = input_shape[-2:]
-    result['pad_shape'] = input_shape[-2:]
-    data_batch = {
-        'inputs': [torch.rand(input_shape)],
-        'data_samples': [SegDataSample(metainfo=result)]
-    }
-    data = model.data_preprocessor(data_batch)
     model.eval()
-    if cfg.model.decode_head.type in ['MaskFormerHead', 'Mask2FormerHead']:
-        # TODO: Support MaskFormer and Mask2Former
-        raise NotImplementedError('MaskFormer and Mask2Former are not '
-                                  'supported yet.')
-    outputs = get_model_complexity_info(
-        model,
-        input_shape=None, ## bug hide in this place. if you set it to something instead of 'None', Error will be raised.
-        inputs=data['inputs'],
-        show_table=False,
-        show_arch=False)
-    result['flops'] = _format_size(outputs['flops'])
-    result['params'] = _format_size(outputs['params'])
-    result['compute_type'] = 'direct: randomly generate a picture'
+    _forward = model.forward
+    for idx, data_batch in enumerate(data_loader):
+        if idx == args.num_images:
+            break
+        data = model.data_preprocessor(data_batch)
+        result['ori_shape'] = data['data_samples'][0].ori_shape
+        result['pad_shape'] = data['data_samples'][0].img_shape
+        if hasattr(data['data_samples'][0], 'batch_input_shape'):
+            result['pad_shape'] = data['data_samples'][0].batch_input_shape
+        model.forward = partial(_forward, data_samples=data['data_samples'])
+        # if inputs is specified, the input_shape could be ``None``
+        outputs = get_model_complexity_info(
+            model,
+            None,
+            inputs=data['inputs'],
+            show_table=False,
+            show_arch=False)
+        avg_flops.append(outputs['flops'])
+        params = outputs['params']
+        result['compute_type'] = 'dataloader: load a picture from the dataset'
+    del data_loader
+    # TODO: check if the result of Mask2Former is correct (contain deformable attention cuda opts)
+    mean_flops = _format_size(int(np.average(avg_flops)))
+    params = _format_size(params)
+    result['flops'] = mean_flops
+    result['params'] = params
+
     return result
 
 

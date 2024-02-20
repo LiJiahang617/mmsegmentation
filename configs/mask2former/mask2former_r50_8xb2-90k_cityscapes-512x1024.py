@@ -1,6 +1,6 @@
-_base_ = ['../_base_/default_runtime.py', '../_base_/datasets/cityscapes.py']
+_base_ = ['../_base_/default_runtime.py', '../_base_/datasets/cityscapes_1024x512.py']
 
-crop_size = (512, 1024)
+crop_size = (512, 512)
 data_preprocessor = dict(
     type='SegDataPreProcessor',
     mean=[123.675, 116.28, 103.53],
@@ -10,7 +10,7 @@ data_preprocessor = dict(
     seg_pad_val=255,
     size=crop_size,
     test_cfg=dict(size_divisor=32))
-num_classes = 19
+num_classes = 20
 model = dict(
     type='EncoderDecoder',
     data_preprocessor=data_preprocessor,

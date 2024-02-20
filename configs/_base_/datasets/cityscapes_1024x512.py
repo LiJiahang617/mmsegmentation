@@ -1,8 +1,8 @@
 # dataset settings
 dataset_type = 'CityscapesDataset'
-data_root = '/media/ljh/data/Cityscapes'
+data_root = '/media/ljh/Kobe24/samsung_touch7/Cityscapes'
 
-sample_scale = (1024, 512)
+sample_scale = (1024, 1024)
 
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),
